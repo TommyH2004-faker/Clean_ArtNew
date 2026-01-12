@@ -18,7 +18,7 @@ namespace TodoApp.Domain.Entities
         public DateTime? UpdatedAt { get; private set; }
         public ICollection<BookGenre> BookGenres { get; private set; }= new List<BookGenre>();
 
-        // Private constructor for EF Core
+
         private Book() { }
 
         // Factory method
@@ -45,12 +45,17 @@ namespace TodoApp.Domain.Entities
                 Description = description,
                 ListPrice = listPrice,
                 Quantity = quantity,
+                CreatedAt = DateTime.UtcNow  
             };
         }
 
-        public void Update(string author, string nameBook, string description, string urlImage,
+        public void Update(int IdBook , string author, string nameBook, string description, string urlImage,
             double listPrice, double sellPrice, int quantity, double avgRating, int discountPercent)
         {
+            if( this.IdBook != IdBook)
+            {
+                throw new ArgumentException("Book ID does not match.", nameof(IdBook));
+            }
             if (string.IsNullOrWhiteSpace(author))
                 throw new ArgumentException("Author cannot be empty", nameof(author));
 
@@ -78,6 +83,7 @@ namespace TodoApp.Domain.Entities
             if (discountPercent < 0 || discountPercent > 100)
                 throw new ArgumentOutOfRangeException(nameof(discountPercent), "DiscountPercent must be between 0 and 100.");
 
+            IdBook = IdBook;
             Author = author;
             NameBook = nameBook;
             Description = description;

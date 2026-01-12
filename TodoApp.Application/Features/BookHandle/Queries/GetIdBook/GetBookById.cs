@@ -1,7 +1,7 @@
 using MediatR;
 using TodoApp.Application.Common;
-using TodoApp.Domain.Entities;
+using TodoApp.Application.Mappings;
 
 namespace TodoApp.Application.Features.BookHandle.Queries.GetIdBook;
 
-public record GetBookByIdQuery(int IdBook) : IRequest<Result<Book?>>;
+public record GetBookByIdQuery(int IdBook) : IRequest<Result<BookResponseDTO>>;

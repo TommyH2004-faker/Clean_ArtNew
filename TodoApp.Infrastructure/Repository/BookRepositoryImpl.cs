@@ -14,10 +14,11 @@ namespace TodoApp.Infrastructure.Repository
             _context = context;
         }
 
-        public async Task AddBookAsync(Book book)
+        public async Task<Book?> AddBookAsync(Book book)
         {
             await _context.Books.AddAsync(book);
             await _context.SaveChangesAsync();
+            return book;
         }
 
         public async Task<Book?> GetBookByIdAsync(int idBook)

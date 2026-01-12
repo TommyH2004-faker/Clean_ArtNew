@@ -125,3 +125,4 @@ D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\BCrypt.Net-Next.dll
 D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
 D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\TestArt\TodoApp.WebAPI\obj\Debug\net8.0\TodoApp.WebAPI.sourcelink.json

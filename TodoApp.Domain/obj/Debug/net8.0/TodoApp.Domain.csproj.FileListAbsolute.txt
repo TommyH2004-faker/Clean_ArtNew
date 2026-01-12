@@ -9,3 +9,4 @@ D:\TestArt\TodoApp.Domain\obj\Debug\net8.0\TodoApp.Domain.dll
 D:\TestArt\TodoApp.Domain\obj\Debug\net8.0\refint\TodoApp.Domain.dll
 D:\TestArt\TodoApp.Domain\obj\Debug\net8.0\TodoApp.Domain.pdb
 D:\TestArt\TodoApp.Domain\obj\Debug\net8.0\ref\TodoApp.Domain.dll
+D:\TestArt\TodoApp.Domain\obj\Debug\net8.0\TodoApp.Domain.sourcelink.json

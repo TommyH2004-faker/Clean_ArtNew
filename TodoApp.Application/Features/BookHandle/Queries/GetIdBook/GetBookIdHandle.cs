@@ -1,11 +1,11 @@
 using MediatR;
 using TodoApp.Application.Common;
+using TodoApp.Application.Mappings;
 using TodoApp.Application.Repository;
-using TodoApp.Domain.Entities;
 
 namespace TodoApp.Application.Features.BookHandle.Queries.GetIdBook;
 
-public class GetBookByIdHandler : IRequestHandler<GetBookByIdQuery, Result<Book?>>
+public class GetBookByIdHandler : IRequestHandler<GetBookByIdQuery, Result<BookResponseDTO>>
 {
     private readonly BookRepository _bookRepository;
 
@@ -14,14 +14,32 @@ public class GetBookByIdHandler : IRequestHandler<GetBookByIdQuery, Result<Book?
         _bookRepository = bookRepository;
     }
 
-    public async Task<Result<Book?>> Handle(GetBookByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<BookResponseDTO>> Handle(GetBookByIdQuery request, CancellationToken cancellationToken)
     {
-        var book =  await _bookRepository.GetBookByIdAsync(request.IdBook);
+        var book = await _bookRepository.GetBookByIdAsync(request.IdBook);
         if (book == null)
         {
-            return Result<Book?>.Failure(ErrorType.NotFound, "Không tìm thấy sách với Id đã cho");
+            return Result<BookResponseDTO>.Failure(ErrorType.NotFound, "Không tìm thấy sách với Id đã cho");
         }
-        return Result<Book?>.Success(book);
+
+        // ✅ Mapping Domain → DTO (giống GetAllBooks)
+        var bookDTO = new BookResponseDTO
+        {
+            IdBook = book.IdBook,
+            Author = book.Author,
+            AvgRating = book.AvgRating,
+            Description = book.Description,
+            ListPrice = book.ListPrice,
+            NameBook = book.NameBook,
+            Quantity = book.Quantity,
+            SellPrice = book.SellPrice,
+            SoldQuantity = book.SoldQuantity,
+            DiscountPercent = book.DiscountPercent,
+            UrlImage = book.UrlImage,
+            CreatedAt = book.CreatedAt,
+            UpdatedAt = book.UpdatedAt
+        };
+
+        return Result<BookResponseDTO>.Success(bookDTO);
     }
-       
 }

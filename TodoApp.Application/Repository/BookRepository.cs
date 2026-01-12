@@ -4,7 +4,7 @@ namespace TodoApp.Application.Repository
 {
     public interface BookRepository
     {
-        Task AddBookAsync(Book book);
+        Task <Book?> AddBookAsync(Book book);
         Task<Book?> GetBookByIdAsync(int idBook);
         Task UpdateBookAsync(Book book);
         Task DeleteBookAsync(Book book);

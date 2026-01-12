@@ -13,3 +13,4 @@ D:\TestArt\TodoApp.Application\obj\Debug\net8.0\TodoApp.Application.dll
 D:\TestArt\TodoApp.Application\obj\Debug\net8.0\refint\TodoApp.Application.dll
 D:\TestArt\TodoApp.Application\obj\Debug\net8.0\TodoApp.Application.pdb
 D:\TestArt\TodoApp.Application\obj\Debug\net8.0\ref\TodoApp.Application.dll
+D:\TestArt\TodoApp.Application\obj\Debug\net8.0\TodoApp.Application.sourcelink.json
