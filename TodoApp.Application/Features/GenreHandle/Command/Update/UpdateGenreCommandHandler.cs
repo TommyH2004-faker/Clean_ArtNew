@@ -30,8 +30,8 @@ namespace TodoApp.Application.Features.GenreHandle.Command.Update
                 return Result<GenreResponseDTO>.Failure(ErrorType.Conflict, "Tên thể loại đã tồn tại");
             }
 
-            // Gọi Domain Method để update
-            genre.Update(request.IdGenre, request.NameGenre);
+            // Gọi Domain Method để update - Entity tự quản lý ID
+            genre.Update(request.NameGenre);
 
             // Lưu vào database
             await _genreRepository.UpdateGenreAsync(genre);

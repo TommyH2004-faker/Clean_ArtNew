@@ -25,13 +25,8 @@ namespace TodoApp.Domain.Entities
         }
         
         // Domain Method - Update
-        public void Update(int idGenre, string nameGenre)
+        public void Update(string nameGenre)
         {
-            if (this.IdGenre != idGenre)
-            {
-                throw new ArgumentException("Genre ID does not match.", nameof(idGenre));
-            }
-            
             if (string.IsNullOrWhiteSpace(nameGenre))
                 throw new ArgumentException("NameGenre cannot be empty", nameof(nameGenre));
     
@@ -39,13 +34,43 @@ namespace TodoApp.Domain.Entities
             this.UpdatedAt = DateTime.UtcNow;
         }
 
-        // Domain Method - Delete Validation
-        public void Delete(int idGenre)
+        // Domain Method - Business Validation cho Delete
+        public bool CanBeDeleted()
         {
-            if (this.IdGenre != idGenre)
+            return !this.BookGenres.Any();
+        }
+
+        public void ValidateForDeletion()
+        {
+            if (!CanBeDeleted())
             {
-                throw new ArgumentException("Genre ID does not match.", nameof(idGenre));
+                throw new InvalidOperationException(
+                    $"Cannot delete genre '{NameGenre}' because it has {BookGenres.Count} book(s) associated. Remove all books first.");
             }
+        }
+
+        // Aggregate Root - Quản lý BookGenres collection
+        public void AddBookGenre(int bookId)
+        {
+            if (bookId <= 0)
+                throw new ArgumentException("BookId must be greater than 0", nameof(bookId));
+
+            if (this.BookGenres.Any(bg => bg.BookId == bookId))
+                throw new InvalidOperationException($"Book {bookId} is already associated with this genre");
+
+            // Sử dụng public constructor của BookGenre
+            var bookGenre = new BookGenre(bookId, this.IdGenre);
+            
+            this.BookGenres.Add(bookGenre);
+        }
+
+        public void RemoveBookGenre(int bookId)
+        {
+            var bookGenre = this.BookGenres.FirstOrDefault(bg => bg.BookId == bookId);
+            if (bookGenre == null)
+                throw new InvalidOperationException($"Book {bookId} is not associated with this genre");
+
+            this.BookGenres.Remove(bookGenre);
         }
     }
 }
