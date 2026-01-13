@@ -3,18 +3,18 @@ using Microsoft.EntityFrameworkCore;
 using TodoApp.Domain.Common;
 using TodoApp.Domain.Entities;
 using TodoApp.Infrastructure.Configuration;
-using GenreEvents = TodoApp.Domain.Events.GenreEvents;
+using TodoApp.Infrastructure.Services;
 
 namespace TodoApp.Infrastructure.Persistence
 {
     public class TodoAppDbContext : DbContext
     {
-        private readonly IMediator _mediator;
+        private readonly IDomainEventDispatcher _eventDispatcher;
 
-        public TodoAppDbContext(DbContextOptions<TodoAppDbContext> options, IMediator mediator) 
+        public TodoAppDbContext(DbContextOptions<TodoAppDbContext> options, IDomainEventDispatcher eventDispatcher) 
             : base(options)
         {
-            _mediator = mediator;
+            _eventDispatcher = eventDispatcher;
         }
 
         public DbSet<Book> Books { get; set; } = null!;
@@ -33,8 +33,18 @@ namespace TodoApp.Infrastructure.Persistence
         }
 
         /// <summary>
-        /// Override SaveChangesAsync để dispatch Domain Events sau khi lưu thành công
+        /// Override SaveChangesAsync để dispatch Domain Events sau khi lưu thành công.
+        /// 
         /// Event-Driven Architecture - Level 5
+        /// 
+        /// Luồng xử lý:
+        /// 1. Lấy entities có Domain Events
+        /// 2. Trích xuất events
+        /// 3. Clear events khỏi entities
+        /// 4. Save changes vào DB (đảm bảo data consistency)
+        /// 5. Dispatch events qua DomainEventDispatcher (auto-discovery)
+        /// 
+        /// ✅ Auto-discovery: Không cần khai báo thủ công khi thêm event mới!
         /// </summary>
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -52,25 +62,11 @@ namespace TodoApp.Infrastructure.Persistence
             // 3. Clear events khỏi entities (tránh dispatch lại)
             entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
 
-            // 4. Lưu changes vào database
+            // 4. Lưu changes vào database TRƯỚC
             var result = await base.SaveChangesAsync(cancellationToken);
 
-            // 5. Convert Domain Events → MediatR Notifications và dispatch
-            foreach (var domainEvent in domainEvents)
-            {
-                INotification? notification = domainEvent switch
-                {
-                    GenreEvents.GenreCreated e => new Application.Events.GenreCreatedEvent(e),
-                    GenreEvents.GenreUpdated e => new Application.Events.GenreUpdatedEvent(e),
-                    GenreEvents.GenreDeleted e => new Application.Events.GenreDeletedEvent(e),
-                    _ => null
-                };
-
-                if (notification != null)
-                {
-                    await _mediator.Publish(notification, cancellationToken);
-                }
-            }
+            // 5. Dispatch events qua DomainEventDispatcher (tự động tìm wrapper)
+            await _eventDispatcher.DispatchAllAsync(domainEvents, cancellationToken);
 
             return result;
         }

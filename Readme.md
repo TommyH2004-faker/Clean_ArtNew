@@ -694,16 +694,235 @@ public class GenreCreatedEvent : INotification {
 }
 ```
 
-**3. Infrastructure Layer - Pattern Matching Conversion**
+**3. Infrastructure Layer - Auto-Discovery với DomainEventDispatcher**
 ```csharp
 // TodoApp.Infrastructure/Persistence/TodoAppDbContext.cs
-var notification = domainEvent switch {
-    GenreEvents.GenreCreated e => new GenreCreatedEvent(e),
-    GenreEvents.GenreUpdated e => new GenreUpdatedEvent(e),
-    GenreEvents.GenreDeleted e => new GenreDeletedEvent(e),
-    _ => null
-};
-await _mediator.Publish(notification, cancellationToken);
+// ✅ Không cần pattern matching thủ công!
+await _eventDispatcher.DispatchAllAsync(domainEvents, cancellationToken);
+```
+
+---
+
+### **🔄 IDomainEventDispatcher - Auto-Discovery Pattern**
+
+#### **❓ Vấn đề với cách cũ (Pattern Matching)**
+
+```csharp
+// ❌ CŨ: Phải khai báo thủ công TỪNG event type
+public class TodoAppDbContext : DbContext {
+    private readonly IMediator _mediator;  // Inject trực tiếp
+    
+    public override async Task<int> SaveChangesAsync(...) {
+        var notification = domainEvent switch {
+            GenreEvents.GenreCreated e => new GenreCreatedEvent(e),
+            GenreEvents.GenreUpdated e => new GenreUpdatedEvent(e),
+            GenreEvents.GenreDeleted e => new GenreDeletedEvent(e),
+            // ❌ Thêm BookEvents → phải sửa file này!
+            // ❌ Thêm UserEvents → phải sửa file này!
+            // ❌ Vi phạm Open/Closed Principle
+            _ => null
+        };
+        await _mediator.Publish(notification);
+    }
+}
+```
+
+**Vấn đề:**
+1. ❌ Mỗi lần thêm entity mới (Book, User) → phải sửa DbContext
+2. ❌ Pattern matching list ngày càng dài
+3. ❌ Vi phạm **Open/Closed Principle** (OCP)
+4. ❌ DbContext biết quá nhiều về event types (tight coupling)
+
+---
+
+#### **✅ Giải pháp: IDomainEventDispatcher**
+
+```csharp
+// ✅ MỚI: DbContext không cần biết về event types
+public class TodoAppDbContext : DbContext {
+    private readonly IDomainEventDispatcher _eventDispatcher;  // Abstraction
+    
+    public override async Task<int> SaveChangesAsync(...) {
+        // ✅ Chỉ 1 dòng, không cần biết chi tiết!
+        await _eventDispatcher.DispatchAllAsync(domainEvents);
+    }
+}
+```
+
+---
+
+#### **📁 Cấu trúc files**
+
+```
+TodoApp.Application/
+└── Events/
+    ├── IDomainEventWrapper.cs         ← Interface marker cho auto-discovery
+    ├── GenreCreatedEvent.cs           ← Implement IDomainEventWrapper<T>
+    ├── GenreUpdatedEvent.cs
+    └── GenreDeletedEvent.cs
+
+TodoApp.Infrastructure/
+└── Services/
+    └── DomainEventDispatcher.cs       ← Auto-discovery engine
+```
+
+---
+
+#### **⚙️ Cách hoạt động**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ 1️⃣ DbContext gọi Dispatcher                                  │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  await _eventDispatcher.DispatchAllAsync(domainEvents);     │
+│  // domainEvents = [GenreEvents.GenreCreated, ...]          │
+└──────────────────┬───────────────────────────────────────────┘
+                   ↓
+┌──────────────────────────────────────────────────────────────┐
+│ 2️⃣ DomainEventDispatcher - Auto Discovery (Reflection)       │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  foreach (var domainEvent in domainEvents) {                │
+│      // Lấy type của domain event                           │
+│      var eventType = domainEvent.GetType();                 │
+│      // → GenreEvents.GenreCreated                          │
+│                                                              │
+│      // Tìm wrapper implement IDomainEventWrapper<T>        │
+│      var wrapperType = FindWrapperType(eventType);          │
+│      // → GenreCreatedEvent                                 │
+│                                                              │
+│      // Tạo instance bằng reflection                        │
+│      var notification = Activator.CreateInstance(           │
+│          wrapperType, domainEvent);                         │
+│      // → new GenreCreatedEvent(domainEvent)                │
+│                                                              │
+│      // Publish qua MediatR                                  │
+│      await _mediator.Publish(notification);                 │
+│  }                                                           │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### **📊 So sánh 2 cách tiếp cận**
+
+| Tiêu chí | IMediator trực tiếp | IDomainEventDispatcher |
+|----------|---------------------|------------------------|
+| **Thêm event mới** | ❌ Sửa DbContext | ✅ Chỉ tạo wrapper class |
+| **DbContext code** | ❌ Phình to theo event count | ✅ Giữ nguyên mãi |
+| **Auto-discovery** | ❌ Không | ✅ Có (Reflection) |
+| **Open/Closed Principle** | ❌ Vi phạm | ✅ Tuân thủ |
+| **Single Responsibility** | ❌ DbContext làm quá nhiều | ✅ Dispatcher chuyên biệt |
+| **Testability** | ❌ Mock IMediator phức tạp | ✅ Mock IDomainEventDispatcher đơn giản |
+| **Performance** | ✅ Nhanh hơn (no reflection) | ⚠️ Chậm hơn một chút (có cache) |
+
+---
+
+#### **🔧 Convention để Auto-Discovery hoạt động**
+
+Để DomainEventDispatcher tự động tìm wrapper, bạn cần tuân thủ convention:
+
+**1. Wrapper phải implement `IDomainEventWrapper<TDomainEvent>`**
+```csharp
+// ✅ ĐÚNG
+public class GenreCreatedEvent : IDomainEventWrapper<GenreEvents.GenreCreated> {
+    public GenreEvents.GenreCreated DomainEvent { get; }
+    
+    public GenreCreatedEvent(GenreEvents.GenreCreated domainEvent) {
+        DomainEvent = domainEvent;
+    }
+}
+```
+
+**2. Wrapper phải có constructor nhận domain event**
+```csharp
+// Constructor signature phải match
+public GenreCreatedEvent(GenreEvents.GenreCreated domainEvent)
+```
+
+**3. Wrapper phải nằm trong Application assembly**
+```csharp
+// DomainEventDispatcher scan assembly này
+var applicationAssembly = typeof(IDomainEventWrapper).Assembly;
+```
+
+---
+
+#### **🚀 Khi thêm BookEvents - Không cần sửa DbContext!**
+
+**Bước 1: Tạo Domain Events (Domain Layer)**
+```csharp
+// TodoApp.Domain/Events/BookEvents.cs
+public static class BookEvents {
+    public record BookCreated : DomainEventBase {
+        public int BookId { get; init; }
+        public string BookName { get; init; }
+        public BookCreated(int bookId, string bookName) {
+            BookId = bookId;
+            BookName = bookName;
+        }
+    }
+}
+```
+
+**Bước 2: Tạo Wrapper (Application Layer)**
+```csharp
+// TodoApp.Application/Events/BookCreatedEvent.cs
+public class BookCreatedEvent : IDomainEventWrapper<BookEvents.BookCreated> {
+    public BookEvents.BookCreated DomainEvent { get; }
+    IDomainEvent IDomainEventWrapper.DomainEvent => DomainEvent;
+    
+    public int BookId => DomainEvent.BookId;
+    public string BookName => DomainEvent.BookName;
+    
+    public BookCreatedEvent(BookEvents.BookCreated domainEvent) {
+        DomainEvent = domainEvent;
+    }
+}
+```
+
+**Bước 3: Tạo Handler (Application Layer)**
+```csharp
+// TodoApp.Application/Features/BookHandle/EventHandlers/BookCreatedEventHandler.cs
+public class BookCreatedEventHandler : INotificationHandler<BookCreatedEvent> {
+    private readonly ILogger<BookCreatedEventHandler> _logger;
+    
+    public async Task Handle(BookCreatedEvent @event, CancellationToken cancel) {
+        _logger.LogInformation($"📚 Book created: {@event.BookName}");
+    }
+}
+```
+
+**✅ KHÔNG CẦN SỬA GÌ TRONG:**
+- ❌ TodoAppDbContext.cs
+- ❌ DomainEventDispatcher.cs
+- ❌ Program.cs (MediatR tự scan handlers)
+
+---
+
+#### **🎯 Tóm tắt IDomainEventDispatcher**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ IDomainEventDispatcher                                       │
+├─────────────────────────────────────────────────────────────┤
+│ 📍 Vị trí: TodoApp.Infrastructure/Services/                 │
+│                                                              │
+│ 🎯 Mục đích:                                                 │
+│ ├─ Tự động tìm wrapper cho mỗi domain event type            │
+│ ├─ Convert Domain Events → MediatR Notifications            │
+│ └─ Dispatch events qua MediatR                              │
+│                                                              │
+│ ✅ Lợi ích:                                                  │
+│ ├─ DbContext sạch sẽ, không biết về event types             │
+│ ├─ Thêm event mới không cần sửa code cũ (OCP)               │
+│ ├─ Dễ test (mock interface)                                 │
+│ └─ Tách biệt concerns (SRP)                                 │
+│                                                              │
+│ ⚠️ Trade-off:                                                │
+│ └─ Dùng Reflection (có cache để optimize)                   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---

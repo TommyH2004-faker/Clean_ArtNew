@@ -37,6 +37,9 @@ builder.Services.AddScoped<IBookRepository, BookRepositoryImpl>();
 builder.Services.AddScoped<IGenreRepository, GenreRepositoryImpl>();
 builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
 
+// Register Domain Event Dispatcher (Auto-discovery cho Event-Driven Architecture)
+builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
 // Register Services
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IGenreService, GenreService>();

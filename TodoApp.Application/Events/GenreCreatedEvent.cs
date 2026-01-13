@@ -1,15 +1,19 @@
 using MediatR;
+using TodoApp.Domain.Common;
 using static TodoApp.Domain.Events.GenreEvents;
 
 namespace TodoApp.Application.Events
 {
     /// <summary>
-    /// MediatR Notification wrapper cho Genre Created Domain Event
-    /// Application layer có thể phụ thuộc MediatR
+    /// MediatR Notification wrapper cho Genre Created Domain Event.
+    /// Implement IDomainEventWrapper để hỗ trợ auto-discovery.
     /// </summary>
-    public class GenreCreatedEvent : INotification
+    public class GenreCreatedEvent : IDomainEventWrapper<GenreCreated>
     {
         public GenreCreated DomainEvent { get; }
+        
+        // Explicit interface implementation
+        IDomainEvent IDomainEventWrapper.DomainEvent => DomainEvent;
         
         public int GenreId => DomainEvent.GenreId;
         public string GenreName => DomainEvent.GenreName;
