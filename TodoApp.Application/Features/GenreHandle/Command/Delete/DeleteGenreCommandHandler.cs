@@ -22,17 +22,17 @@ namespace TodoApp.Application.Features.GenreHandle.Command.Delete
                 return Result<bool>.Failure(ErrorType.NotFound, "Không tìm thấy thể loại");
             }
 
-            // Gọi Domain Method để validate business rules trước khi xóa
+            // Gọi Domain Method để validate và raise event
             try
             {
-                genre.ValidateForDeletion();
+                genre.MarkForDeletion(); // Raises GenreDeletedEvent
             }
             catch (InvalidOperationException ex)
             {
                 return Result<bool>.Failure(ErrorType.Conflict, ex.Message);
             }
 
-            // Xóa khỏi database
+            // Xóa khỏi database - Event sẽ được dispatch sau SaveChanges
             await _genreRepository.DeleteGenreAsync(genre);
 
             return Result<bool>.Success(true);

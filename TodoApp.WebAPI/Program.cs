@@ -70,11 +70,13 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-//  MediatR - CQRS Pattern
+//  MediatR - CQRS Pattern + Domain Events
 // ở đây đăng ký các handlers từ assembly Application 
-// nó sẽ tự đăng ký tất cả các command và query handlers , không cần phải khai báo thuần 
+// nó sẽ tự đăng ký tất cả các command, query handlers VÀ event handlers
  builder.Services.AddMediatR(cfg => {
+        // Register từ Application layer (Commands, Queries, Event Handlers)
         cfg.RegisterServicesFromAssembly(typeof(TodoApp.Application.Features.BookHandle.Command.CreateBookCommand).Assembly);
+        
         //  THÊM ValidationBehavior để tự động validate
         cfg.AddOpenBehavior(typeof(TodoApp.Application.Behaviors.ValidationBehavior<,>));
     });
