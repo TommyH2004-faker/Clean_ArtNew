@@ -3,7 +3,7 @@ using TodoApp.Domain.Entities;
 
 namespace TodoApp.Application.Repository
 {
-    public interface GenreRepository
+    public interface IGenreRepository
     {
         Task AddGenreAsync(Genre genre);
         Task<Genre?> GetGenreByIdAsync(int idGenre);

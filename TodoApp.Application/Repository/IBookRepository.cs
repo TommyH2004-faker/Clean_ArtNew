@@ -2,7 +2,7 @@ using TodoApp.Domain.Entities;
 
 namespace TodoApp.Application.Repository
 {
-    public interface BookRepository
+    public interface IBookRepository
     {
         Task <Book?> AddBookAsync(Book book);
         Task<Book?> GetBookByIdAsync(int idBook);

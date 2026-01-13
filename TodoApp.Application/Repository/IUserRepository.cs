@@ -2,7 +2,7 @@ using TodoApp.Domain.Entities;
 
 namespace TodoApp.Application.Repository
 {
-    public interface UserRepository
+    public interface IUserRepository
     {
         Task AddUserAsync(User user);
         Task<User?> GetUserByUsernameAsync(string username);

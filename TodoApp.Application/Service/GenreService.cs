@@ -6,9 +6,9 @@ namespace TodoApp.Application.Service
 {
     public class GenreService : IGenreService
     {
-        private readonly GenreRepository _genreRepository;
+        private readonly IGenreRepository _genreRepository;
 
-        public GenreService(GenreRepository genreRepository)
+        public GenreService(IGenreRepository genreRepository)
         {
             _genreRepository = genreRepository;
         }

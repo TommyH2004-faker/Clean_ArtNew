@@ -6,9 +6,9 @@ namespace TodoApp.Application.Service
 {
     public class BookService : IBookService
     {
-        private readonly BookRepository _bookRepository;
+        private readonly IBookRepository _bookRepository;
 
-        public BookService(BookRepository bookRepository)
+        public BookService(IBookRepository bookRepository)
         {
             _bookRepository = bookRepository;
         }

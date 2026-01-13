@@ -1,15 +1,15 @@
 using MediatR;
 using TodoApp.Application.Common;
-using TodoApp.Application.Mappings;
+using TodoApp.Application.DTOs;
 using TodoApp.Application.Repository;
 
 namespace TodoApp.Application.Features.BookHandle.Queries.GetAllBooks
 {
     public class GetAllBooksQueryHandler : IRequestHandler<GetAllBooksQuery, Result<List<BookResponseDTO>>>
     {
-        private readonly BookRepository _bookRepository;
+        private readonly IBookRepository _bookRepository;
 
-        public GetAllBooksQueryHandler(BookRepository bookRepository)
+        public GetAllBooksQueryHandler(IBookRepository bookRepository)
         {
             _bookRepository = bookRepository;
         }

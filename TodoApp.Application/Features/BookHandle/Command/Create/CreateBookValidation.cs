@@ -4,8 +4,8 @@ using FluentValidation;
 using TodoApp.Application.Repository;
 public class CreateBookValidation : AbstractValidator<CreateBookCommand>
 {
-    private readonly BookRepository _bookRepository;
-    public CreateBookValidation(BookRepository bookRepository)
+    private readonly IBookRepository _bookRepository;
+    public CreateBookValidation(IBookRepository bookRepository)
     {
         _bookRepository = bookRepository;
 

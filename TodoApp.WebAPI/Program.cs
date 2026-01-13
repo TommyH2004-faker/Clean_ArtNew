@@ -33,9 +33,9 @@ builder.Services.AddDbContext<TodoAppDbContext>(
 );
 
 // Register Repositories
-builder.Services.AddScoped<BookRepository, BookRepositoryImpl>();
-builder.Services.AddScoped<GenreRepository, GenreRepositoryImpl>();
-builder.Services.AddScoped<UserRepository, UserRepositoryImpl>();
+builder.Services.AddScoped<IBookRepository, BookRepositoryImpl>();
+builder.Services.AddScoped<IGenreRepository, GenreRepositoryImpl>();
+builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
 
 // Register Services
 builder.Services.AddScoped<IBookService, BookService>();

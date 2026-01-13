@@ -6,9 +6,9 @@ namespace TodoApp.Application.Features.BookHandle.Command
 {
     public class DeleteBookCommandHandler : IRequestHandler<DeleteBookCommand, Result<bool>>
     {
-        private readonly BookRepository _bookRepository;
+        private readonly IBookRepository _bookRepository;
 
-        public DeleteBookCommandHandler(BookRepository bookRepository)
+        public DeleteBookCommandHandler(IBookRepository bookRepository)
         {
             _bookRepository = bookRepository;
         }

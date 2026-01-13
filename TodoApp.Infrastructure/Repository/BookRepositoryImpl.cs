@@ -5,7 +5,7 @@ using TodoApp.Infrastructure.Persistence;
 
 namespace TodoApp.Infrastructure.Repository
 {
-    public class BookRepositoryImpl : BookRepository
+    public class BookRepositoryImpl : IBookRepository
     {
         private readonly TodoAppDbContext _context;
 

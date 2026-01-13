@@ -6,9 +6,9 @@ namespace TodoApp.Application.Features.Auth.Command
 {
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterResponse>
     {
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
 
-        public RegisterCommandHandler(UserRepository userRepository)
+        public RegisterCommandHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }

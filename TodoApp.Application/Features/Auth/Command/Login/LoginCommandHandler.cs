@@ -7,10 +7,10 @@ namespace TodoApp.Application.Features.Auth.Command.Login
 {
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     {
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IJwtService _jwtService;
 
-        public LoginCommandHandler(UserRepository userRepository, IJwtService jwtService)
+        public LoginCommandHandler(IUserRepository userRepository, IJwtService jwtService)
         {
             _userRepository = userRepository;
             _jwtService = jwtService;

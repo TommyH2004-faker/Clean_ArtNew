@@ -6,10 +6,10 @@ using TodoApp.Application.Service;
 namespace TodoApp.Application.Features.Auth.Command.Refresh;
     public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, LoginResponse>
     {
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IJwtService _jwtService;
 
-        public RefreshTokenCommandHandler(UserRepository userRepository, IJwtService jwtService)
+        public RefreshTokenCommandHandler(IUserRepository userRepository, IJwtService jwtService)
         {
             _userRepository = userRepository;
             _jwtService = jwtService;

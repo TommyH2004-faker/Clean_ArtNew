@@ -83,7 +83,7 @@ namespace TodoApp.Domain.Entities
             if (discountPercent < 0 || discountPercent > 100)
                 throw new ArgumentOutOfRangeException(nameof(discountPercent), "DiscountPercent must be between 0 and 100.");
 
-            IdBook = IdBook;
+          
             Author = author;
             NameBook = nameBook;
             Description = description;

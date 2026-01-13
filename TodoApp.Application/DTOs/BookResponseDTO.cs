@@ -1,4 +1,4 @@
-namespace TodoApp.Application.Mappings
+namespace TodoApp.Application.DTOs
 {
     public class BookResponseDTO
     {

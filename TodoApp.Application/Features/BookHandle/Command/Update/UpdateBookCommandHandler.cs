@@ -1,16 +1,16 @@
 using MediatR;
 using TodoApp.Application.Common;
 using TodoApp.Application.Features.BookHandle.Command.Update;
-using TodoApp.Application.Mappings;
+using TodoApp.Application.DTOs;
 using TodoApp.Application.Repository;
 
 namespace TodoApp.Application.Features.BookHandle.Command
 {
     public class UpdateBookCommandHandler : IRequestHandler<UpdateBookCommand, Result<BookResponseDTO>>
     {
-        private readonly BookRepository _bookRepository;
+        private readonly IBookRepository _bookRepository;
 
-        public UpdateBookCommandHandler(BookRepository bookRepository)
+        public UpdateBookCommandHandler(IBookRepository bookRepository)
         {
             _bookRepository = bookRepository;
         }

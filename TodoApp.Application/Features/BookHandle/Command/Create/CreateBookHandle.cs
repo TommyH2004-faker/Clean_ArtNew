@@ -1,6 +1,6 @@
 using MediatR;
 using TodoApp.Application.Common;
-using TodoApp.Application.Mappings;
+using TodoApp.Application.DTOs;
 using TodoApp.Application.Repository;
 using TodoApp.Domain.Entities;
 
@@ -8,8 +8,8 @@ namespace TodoApp.Application.Features.BookHandle.Command;
 
 public class CreateBookHandle : IRequestHandler<CreateBookCommand, Result<BookResponseDTO>>
 {
-    private readonly BookRepository _bookRepository;
-    public CreateBookHandle(BookRepository bookRepository)
+    private readonly IBookRepository _bookRepository;
+    public CreateBookHandle(IBookRepository bookRepository)
     {
         _bookRepository = bookRepository;
     }
