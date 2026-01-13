@@ -126,3 +126,5 @@ D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.J
 D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
 D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 D:\TestArt\TodoApp.WebAPI\obj\Debug\net8.0\TodoApp.WebAPI.sourcelink.json
+D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\Newtonsoft.Json.dll
+D:\TestArt\TodoApp.WebAPI\bin\Debug\net8.0\SendGrid.dll

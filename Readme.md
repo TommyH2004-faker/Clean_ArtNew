@@ -129,7 +129,7 @@ dotnet ef migrations add DeleteIdUser --startup-project ..\TodoApp.WebAPI
 dotnet ef migrations add JwtProperty --startup-project ..\TodoApp.WebAPI
 dotnet ef migrations add addColumnRole --startup-project ..\TodoApp.WebAPI
 ```
-
+dotnet ef migrations add AuditCode --startup-project ..\TodoApp.WebAPI
 ### **Tips: Xử lý lỗi Migration**
 Nếu migration báo lỗi bảng đã tồn tại nhưng muốn giữ lại dữ liệu:
 1. Mở file migration vừa tạo (trong `Migrations/`)
@@ -1186,5 +1186,899 @@ Clean Architecture  → kiến trúc
 DDD                → tư duy thiết kế Domain
 CQRS / MediatR     → cách tổ chức luồng xử lý
 Domain Events      → xử lý side effects (Level 5)
+No EVENTS
+Request
+ → MediatR.Send
+ → CommandHandler
+ → Domain Entity
+ → Repository
+ → DbContext.SaveChanges
+ → Log
+ → Clear Cache
+ → Response
+EVENT
+Request
+ → MediatR.Send
+ → CommandHandler
+ → Domain Entity (raise event)
+ → Repository
+ → DbContext.SaveChanges
+ → MediatR.Publish(Event)
+ → EventHandler(s)
+ → Response
 
 Made with ❤️ using Clean Architecture + DDD + CQRS + Event-Driven Architecture
+
+---
+
+## 📝 **HƯỚNG DẪN: TRIỂN KHAI EVENT-DRIVEN CHO GENRE (LEVEL 5)**
+
+### **🎯 Mục tiêu**
+Xây dựng Event-Driven Architecture cho Genre entity từ đầu, bao gồm:
+- Domain Events (pure POCOs)
+- Event Handlers (side effects)
+- Auto-discovery Dispatcher
+- Clean Architecture compliance
+
+---
+
+### **📋 BƯỚC 1: TẠO DOMAIN EVENT INFRASTRUCTURE (Common)**
+
+#### **1.1. Tạo IDomainEvent.cs**
+📍 `TodoApp.Domain/Common/IDomainEvent.cs`
+
+```csharp
+namespace TodoApp.Domain.Common
+{
+    /// <summary>
+    /// Base interface cho tất cả Domain Events.
+    /// Domain Events là pure POCOs, không phụ thuộc infrastructure.
+    /// </summary>
+    public interface IDomainEvent
+    {
+        /// <summary>
+        /// Thời điểm event xảy ra
+        /// </summary>
+        DateTime OccurredOn { get; }
+    }
+}
+```
+
+**Lý do:** Interface để marking tất cả domain events.
+
+---
+
+#### **1.2. Tạo DomainEventBase.cs**
+📍 `TodoApp.Domain/Common/DomainEventBase.cs`
+
+```csharp
+namespace TodoApp.Domain.Common
+{
+    /// <summary>
+    /// Base record cho Domain Events.
+    /// Sử dụng C# record để đảm bảo immutability.
+    /// </summary>
+    public abstract record DomainEventBase : IDomainEvent
+    {
+        public DateTime OccurredOn { get; init; }
+        
+        protected DomainEventBase()
+        {
+            OccurredOn = DateTime.UtcNow;
+        }
+    }
+}
+```
+
+**Lý do:** Base class với auto-set timestamp.
+
+---
+
+#### **1.3. Tạo IHasDomainEvents.cs**
+📍 `TodoApp.Domain/Common/IHasDomainEvents.cs`
+
+```csharp
+namespace TodoApp.Domain.Common
+{
+    /// <summary>
+    /// Interface cho Aggregate Roots có thể raise Domain Events.
+    /// Entities implement interface này sẽ có collection _domainEvents.
+    /// </summary>
+    public interface IHasDomainEvents
+    {
+        IReadOnlyCollection<IDomainEvent> DomainEvents { get; }
+        void AddDomainEvent(IDomainEvent domainEvent);
+        void RemoveDomainEvent(IDomainEvent domainEvent);
+        void ClearDomainEvents();
+    }
+}
+```
+
+**Lý do:** Contract cho entities có thể raise events.
+
+---
+
+### **📋 BƯỚC 2: TẠO GENRE DOMAIN EVENTS**
+
+#### **2.1. Tạo GenreEvents.cs**
+📍 `TodoApp.Domain/Events/GenreEvents.cs`
+
+```csharp
+using TodoApp.Domain.Common;
+
+namespace TodoApp.Domain.Events
+{
+    /// <summary>
+    /// Domain Events cho Genre aggregate.
+    /// Static class chứa các nested records.
+    /// </summary>
+    public static class GenreEvents
+    {
+        /// <summary>
+        /// Event: Genre mới được tạo
+        /// </summary>
+        public record GenreCreated : DomainEventBase
+        {
+            public int GenreId { get; init; }
+            public string GenreName { get; init; }
+            
+            public GenreCreated(int genreId, string genreName)
+            {
+                GenreId = genreId;
+                GenreName = genreName;
+            }
+        }
+
+        /// <summary>
+        /// Event: Genre được cập nhật
+        /// </summary>
+        public record GenreUpdated : DomainEventBase
+        {
+            public int GenreId { get; init; }
+            public string OldName { get; init; }
+            public string NewName { get; init; }
+            
+            public GenreUpdated(int genreId, string oldName, string newName)
+            {
+                GenreId = genreId;
+                OldName = oldName;
+                NewName = newName;
+            }
+        }
+
+        /// <summary>
+        /// Event: Genre bị xóa
+        /// </summary>
+        public record GenreDeleted : DomainEventBase
+        {
+            public int GenreId { get; init; }
+            public string GenreName { get; init; }
+            
+            public GenreDeleted(int genreId, string genreName)
+            {
+                GenreId = genreId;
+                GenreName = genreName;
+            }
+        }
+    }
+}
+```
+
+**✅ Checkpoint:** Domain Events hoàn toàn PURE, không phụ thuộc gì!
+
+---
+
+### **📋 BƯỚC 3: CẬP NHẬT GENRE ENTITY**
+
+#### **3.1. Implement IHasDomainEvents**
+📍 `TodoApp.Domain/Entities/Genre.cs`
+
+```csharp
+public class Genre : IHasDomainEvents  // ← Implement interface
+{
+    // ... existing properties ...
+    
+    // Domain Events Support
+    private readonly List<IDomainEvent> _domainEvents = new();
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    
+    public void AddDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+    
+    public void RemoveDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Remove(domainEvent);
+    }
+    
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
+}
+```
+
+---
+
+#### **3.2. Thêm RaiseCreatedEvent() method**
+
+```csharp
+public static Genre Create(string nameGenre)
+{
+    if (string.IsNullOrWhiteSpace(nameGenre))
+        throw new ArgumentException("NameGenre cannot be empty");
+
+    var genre = new Genre
+    {
+        NameGenre = nameGenre,
+        CreatedAt = DateTime.UtcNow
+    };
+    
+    // KHÔNG raise event ở đây vì IdGenre = 0
+    return genre;
+}
+
+/// <summary>
+/// Raise Created event SAU khi entity đã được save vào DB.
+/// Lúc này IdGenre đã có giá trị thật từ database.
+/// </summary>
+public void RaiseCreatedEvent()
+{
+    AddDomainEvent(new GenreEvents.GenreCreated(this.IdGenre, this.NameGenre));
+}
+```
+
+**⚠️ QUAN TRỌNG:** Event được raise SAU khi save, để có ID thật từ DB!
+
+---
+
+#### **3.3. Update() method raise event**
+
+```csharp
+public void Update(string nameGenre)
+{
+    if (string.IsNullOrWhiteSpace(nameGenre))
+        throw new ArgumentException("NameGenre cannot be empty");
+
+    var oldName = this.NameGenre;
+    this.NameGenre = nameGenre;
+    this.UpdatedAt = DateTime.UtcNow;
+
+    // Raise Domain Event
+    AddDomainEvent(new GenreEvents.GenreUpdated(this.IdGenre, oldName, nameGenre));
+}
+```
+
+---
+
+#### **3.4. MarkForDeletion() method raise event**
+
+```csharp
+public void MarkForDeletion()
+{
+    ValidateForDeletion();  // Business rule validation
+    
+    // Raise Domain Event
+    AddDomainEvent(new GenreEvents.GenreDeleted(this.IdGenre, this.NameGenre));
+}
+```
+
+---
+
+### **📋 BƯỚC 4: TẠO APPLICATION EVENT WRAPPERS**
+
+#### **4.1. Tạo IDomainEventWrapper.cs**
+📍 `TodoApp.Application/Events/IDomainEventWrapper.cs`
+
+```csharp
+using MediatR;
+using TodoApp.Domain.Common;
+
+namespace TodoApp.Application.Events
+{
+    /// <summary>
+    /// Interface marker cho Domain Event wrappers.
+    /// Cho phép auto-discovery.
+    /// </summary>
+    public interface IDomainEventWrapper : INotification
+    {
+        IDomainEvent DomainEvent { get; }
+    }
+
+    /// <summary>
+    /// Generic wrapper interface cho type-safe conversion
+    /// </summary>
+    public interface IDomainEventWrapper<TDomainEvent> : IDomainEventWrapper
+        where TDomainEvent : IDomainEvent
+    {
+        new TDomainEvent DomainEvent { get; }
+    }
+}
+```
+
+---
+
+#### **4.2. Tạo GenreCreatedEvent.cs (wrapper)**
+📍 `TodoApp.Application/Events/GenreCreatedEvent.cs`
+
+```csharp
+using MediatR;
+using TodoApp.Domain.Common;
+using static TodoApp.Domain.Events.GenreEvents;
+
+namespace TodoApp.Application.Events
+{
+    /// <summary>
+    /// MediatR Notification wrapper cho Genre Created Domain Event.
+    /// Implement IDomainEventWrapper để hỗ trợ auto-discovery.
+    /// </summary>
+    public class GenreCreatedEvent : IDomainEventWrapper<GenreCreated>
+    {
+        public GenreCreated DomainEvent { get; }
+        
+        // Explicit interface implementation
+        IDomainEvent IDomainEventWrapper.DomainEvent => DomainEvent;
+        
+        public int GenreId => DomainEvent.GenreId;
+        public string GenreName => DomainEvent.GenreName;
+        public DateTime OccurredOn => DomainEvent.OccurredOn;
+
+        public GenreCreatedEvent(GenreCreated domainEvent)
+        {
+            DomainEvent = domainEvent;
+        }
+    }
+}
+```
+
+**Tương tự:** Tạo `GenreUpdatedEvent.cs` và `GenreDeletedEvent.cs`
+
+---
+
+### **📋 BƯỚC 5: TẠO AUTO-DISCOVERY DISPATCHER**
+
+#### **5.1. Tạo DomainEventDispatcher.cs**
+📍 `TodoApp.Infrastructure/Services/DomainEventDispatcher.cs`
+
+```csharp
+using System.Collections.Concurrent;
+using System.Reflection;
+using MediatR;
+using TodoApp.Application.Events;
+using TodoApp.Domain.Common;
+
+namespace TodoApp.Infrastructure.Services
+{
+    /// <summary>
+    /// Service tự động convert Domain Events → MediatR Notifications.
+    /// Sử dụng reflection để auto-discover event wrappers.
+    /// </summary>
+    public class DomainEventDispatcher : IDomainEventDispatcher
+    {
+        private readonly IMediator _mediator;
+        private static readonly ConcurrentDictionary<Type, Type?> _eventWrapperCache = new();
+        private static readonly ConcurrentDictionary<Type, ConstructorInfo?> _constructorCache = new();
+
+        public DomainEventDispatcher(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        public async Task DispatchAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
+        {
+            var notification = CreateNotification(domainEvent);
+            
+            if (notification != null)
+            {
+                await _mediator.Publish(notification, cancellationToken);
+            }
+        }
+
+        public async Task DispatchAllAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken cancellationToken = default)
+        {
+            foreach (var domainEvent in domainEvents)
+            {
+                await DispatchAsync(domainEvent, cancellationToken);
+            }
+        }
+
+        private INotification? CreateNotification(IDomainEvent domainEvent)
+        {
+            var domainEventType = domainEvent.GetType();
+            var wrapperType = _eventWrapperCache.GetOrAdd(domainEventType, FindWrapperType);
+            
+            if (wrapperType == null) return null;
+
+            var constructor = _constructorCache.GetOrAdd(wrapperType, t => 
+                t.GetConstructor(new[] { domainEventType }));
+            
+            if (constructor == null) return null;
+
+            return constructor.Invoke(new object[] { domainEvent }) as INotification;
+        }
+
+        private static Type? FindWrapperType(Type domainEventType)
+        {
+            var targetInterface = typeof(IDomainEventWrapper<>).MakeGenericType(domainEventType);
+            var applicationAssembly = typeof(IDomainEventWrapper).Assembly;
+            
+            return applicationAssembly.GetTypes()
+                .FirstOrDefault(t => 
+                    !t.IsAbstract && 
+                    !t.IsInterface && 
+                    targetInterface.IsAssignableFrom(t));
+        }
+    }
+
+    public interface IDomainEventDispatcher
+    {
+        Task DispatchAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default);
+        Task DispatchAllAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken cancellationToken = default);
+    }
+}
+```
+
+**✨ Magic:** Tự động tìm wrapper cho mỗi domain event type!
+
+---
+
+### **📋 BƯỚC 6: CẬP NHẬT DBCONTEXT**
+
+#### **6.1. Sửa TodoAppDbContext.cs**
+📍 `TodoApp.Infrastructure/Persistence/TodoAppDbContext.cs`
+
+```csharp
+public class TodoAppDbContext : DbContext
+{
+    private readonly IDomainEventDispatcher _eventDispatcher;  // ← Inject dispatcher
+
+    public TodoAppDbContext(
+        DbContextOptions<TodoAppDbContext> options, 
+        IDomainEventDispatcher eventDispatcher) 
+        : base(options)
+    {
+        _eventDispatcher = eventDispatcher;
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // 1. Lấy entities có Domain Events
+        var entitiesWithEvents = ChangeTracker.Entries<IHasDomainEvents>()
+            .Where(e => e.Entity.DomainEvents.Any())
+            .Select(e => e.Entity)
+            .ToList();
+
+        // 2. Lấy events
+        var domainEvents = entitiesWithEvents
+            .SelectMany(e => e.DomainEvents)
+            .ToList();
+
+        // 3. Clear events
+        entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
+
+        // 4. Save TRƯỚC
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        // 5. Dispatch events SAU (tự động tìm wrapper)
+        await _eventDispatcher.DispatchAllAsync(domainEvents, cancellationToken);
+
+        return result;
+    }
+}
+```
+
+**✅ Lợi ích:** Không cần pattern matching, tự động dispatch!
+
+---
+
+### **📋 BƯỚC 7: TẠO EVENT HANDLERS**
+
+#### **7.1. GenreCreatedEventHandler.cs (Logging)**
+📍 `TodoApp.Application/Features/GenreHandle/EventHandlers/`
+
+```csharp
+using MediatR;
+using Microsoft.Extensions.Logging;
+using TodoApp.Application.Events;
+
+namespace TodoApp.Application.Features.GenreHandle.EventHandlers
+{
+    public class GenreCreatedEventHandler : INotificationHandler<GenreCreatedEvent>
+    {
+        private readonly ILogger<GenreCreatedEventHandler> _logger;
+
+        public GenreCreatedEventHandler(ILogger<GenreCreatedEventHandler> logger)
+        {
+            _logger = logger;
+        }
+
+        public Task Handle(GenreCreatedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation(
+                "✅ Domain Event: Genre '{GenreName}' (ID: {GenreId}) was created at {Time}",
+                notification.GenreName,
+                notification.GenreId,
+                notification.OccurredOn);
+
+            return Task.CompletedTask;
+        }
+    }
+}
+```
+
+---
+
+#### **7.2. GenreCacheInvalidationHandler.cs**
+
+```csharp
+using MediatR;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using TodoApp.Application.Events;
+
+namespace TodoApp.Application.Features.GenreHandle.EventHandlers
+{
+    public class GenreCacheInvalidationHandler :
+        INotificationHandler<GenreCreatedEvent>,
+        INotificationHandler<GenreUpdatedEvent>,
+        INotificationHandler<GenreDeletedEvent>
+    {
+        private readonly IMemoryCache _cache;
+        private readonly ILogger<GenreCacheInvalidationHandler> _logger;
+        private const string ALL_GENRES_CACHE_KEY = "genres:all";
+
+        public GenreCacheInvalidationHandler(IMemoryCache cache, ILogger<GenreCacheInvalidationHandler> logger)
+        {
+            _cache = cache;
+            _logger = logger;
+        }
+
+        public Task Handle(GenreCreatedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("🗑️ [CACHE] Clearing cache after Genre creation");
+            _cache.Remove(ALL_GENRES_CACHE_KEY);
+            return Task.CompletedTask;
+        }
+
+        public Task Handle(GenreUpdatedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("🗑️ [CACHE] Clearing cache after Genre update");
+            _cache.Remove(ALL_GENRES_CACHE_KEY);
+            _cache.Remove($"genres:id:{notification.GenreId}");
+            return Task.CompletedTask;
+        }
+
+        public Task Handle(GenreDeletedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("🗑️ [CACHE] Clearing cache after Genre deletion");
+            _cache.Remove(ALL_GENRES_CACHE_KEY);
+            return Task.CompletedTask;
+        }
+    }
+}
+```
+
+---
+
+#### **7.3. GenreAuditLogHandler.cs**
+
+```csharp
+using System.Text.Json;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using TodoApp.Application.Events;
+using TodoApp.Application.Repository;
+using TodoApp.Domain.Entities;
+
+namespace TodoApp.Application.Features.GenreHandle.EventHandlers
+{
+    public class GenreAuditLogHandler :
+        INotificationHandler<GenreCreatedEvent>,
+        INotificationHandler<GenreUpdatedEvent>,
+        INotificationHandler<GenreDeletedEvent>
+    {
+        private readonly IAuditLogRepository _auditLogRepository;
+        private readonly ILogger<GenreAuditLogHandler> _logger;
+
+        public GenreAuditLogHandler(IAuditLogRepository auditLogRepository, ILogger<GenreAuditLogHandler> logger)
+        {
+            _auditLogRepository = auditLogRepository;
+            _logger = logger;
+        }
+
+        public async Task Handle(GenreCreatedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("📝 [AUDIT] Recording CREATE for Genre ID: {GenreId}", notification.GenreId);
+
+            var newValues = JsonSerializer.Serialize(new { notification.GenreId, notification.GenreName });
+            var auditLog = AuditLog.Create("CREATE", "Genre", notification.GenreId.ToString(), null, newValues, "System");
+            
+            await _auditLogRepository.AddAsync(auditLog);
+        }
+
+        public async Task Handle(GenreUpdatedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("📝 [AUDIT] Recording UPDATE for Genre ID: {GenreId}", notification.GenreId);
+
+            var oldValues = JsonSerializer.Serialize(new { GenreName = notification.OldName });
+            var newValues = JsonSerializer.Serialize(new { GenreName = notification.NewName });
+            var auditLog = AuditLog.Create("UPDATE", "Genre", notification.GenreId.ToString(), oldValues, newValues, "System");
+            
+            await _auditLogRepository.AddAsync(auditLog);
+        }
+
+        public async Task Handle(GenreDeletedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("📝 [AUDIT] Recording DELETE for Genre ID: {GenreId}", notification.GenreId);
+
+            var oldValues = JsonSerializer.Serialize(new { notification.GenreId, notification.GenreName });
+            var auditLog = AuditLog.Create("DELETE", "Genre", notification.GenreId.ToString(), oldValues, null, "System");
+            
+            await _auditLogRepository.AddAsync(auditLog);
+        }
+    }
+}
+```
+
+---
+
+#### **7.4. GenreNotificationHandler.cs**
+
+```csharp
+using MediatR;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using TodoApp.Application.Events;
+using TodoApp.Application.Service;
+
+namespace TodoApp.Application.Features.GenreHandle.EventHandlers
+{
+    public class GenreNotificationHandler :
+        INotificationHandler<GenreCreatedEvent>,
+        INotificationHandler<GenreUpdatedEvent>,
+        INotificationHandler<GenreDeletedEvent>
+    {
+        private readonly ILogger<GenreNotificationHandler> _logger;
+        private readonly IEmailService _emailService;
+        private readonly string[] _adminEmails;
+
+        public GenreNotificationHandler(
+            ILogger<GenreNotificationHandler> logger,
+            IEmailService emailService,
+            IConfiguration configuration)
+        {
+            _logger = logger;
+            _emailService = emailService;
+            _adminEmails = configuration.GetSection("AdminEmails").Get<string[]>() ?? new[] { "admin@example.com" };
+        }
+
+        public async Task Handle(GenreCreatedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("📧 [NOTIFICATION] Sending email for new Genre: {GenreName}", notification.GenreName);
+
+            var subject = $"🎉 New Genre Created: {notification.GenreName}";
+            var body = $@"
+                <h2>Genre Created</h2>
+                <p><strong>ID:</strong> {notification.GenreId}</p>
+                <p><strong>Name:</strong> {notification.GenreName}</p>
+                <p><strong>Time:</strong> {notification.OccurredOn:yyyy-MM-dd HH:mm:ss}</p>";
+
+            foreach (var email in _adminEmails)
+            {
+                await _emailService.SendEmailAsync(email, subject, body, isHtml: true);
+            }
+        }
+
+        public async Task Handle(GenreUpdatedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("📧 [NOTIFICATION] Sending email for Genre update");
+            // Similar implementation...
+        }
+
+        public async Task Handle(GenreDeletedEvent notification, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("📧 [NOTIFICATION] Sending email for Genre deletion");
+            // Similar implementation...
+        }
+    }
+}
+```
+
+---
+
+### **📋 BƯỚC 8: CẬP NHẬT COMMAND HANDLER**
+
+#### **8.1. Sửa CreateGenreCommandHandler.cs**
+📍 `TodoApp.Application/Features/GenreHandle/Command/Create/`
+
+```csharp
+public async Task<Result<GenreResponseDTO>> Handle(CreateGenreCommand request, CancellationToken cancellationToken)
+{
+    // 1. Business validation
+    var existingGenre = await _genreRepository.GetNameGenreAsync(request.NameGenre);
+    if (existingGenre != null)
+    {
+        return Result<GenreResponseDTO>.Failure(ErrorType.Conflict, "Genre đã tồn tại");
+    }
+
+    // 2. Tạo Genre (chưa có event)
+    var newGenre = Genre.Create(request.NameGenre);
+
+    // 3. Save để có ID
+    await _genreRepository.AddGenreAsync(newGenre);
+
+    // 4. Raise event SAU khi có ID thật
+    newGenre.RaiseCreatedEvent();
+    await _genreRepository.SaveChangesAsync();  // ← Events được dispatch ở đây
+
+    // 5. Return DTO
+    return Result<GenreResponseDTO>.Success(new GenreResponseDTO { ... });
+}
+```
+
+**⚠️ KEY POINT:** Raise event SAU khi save, để có ID thật!
+
+---
+
+### **📋 BƯỚC 9: ĐĂNG KÝ DEPENDENCY INJECTION**
+
+#### **9.1. Cập nhật Program.cs**
+📍 `TodoApp.WebAPI/Program.cs`
+
+```csharp
+// Register Repositories
+builder.Services.AddScoped<IGenreRepository, GenreRepositoryImpl>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepositoryImpl>();
+
+// Register Domain Event Dispatcher (Auto-discovery)
+builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
+// Register Memory Cache
+builder.Services.AddMemoryCache();
+
+// Register Email Service
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
+// Register MediatR (auto-scan event handlers)
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(typeof(CreateGenreCommand).Assembly);
+});
+```
+
+---
+
+### **📋 BƯỚC 10: TẠO SUPPORTING ENTITIES**
+
+#### **10.1. AuditLog.cs**
+📍 `TodoApp.Domain/Entities/AuditLog.cs`
+
+```csharp
+namespace TodoApp.Domain.Entities
+{
+    public class AuditLog
+    {
+        public int Id { get; private set; }
+        public string Action { get; private set; } = null!;
+        public string EntityType { get; private set; } = null!;
+        public string EntityId { get; private set; } = null!;
+        public string? OldValues { get; private set; }
+        public string? NewValues { get; private set; }
+        public DateTime Timestamp { get; private set; }
+        public string? PerformedBy { get; private set; }
+
+        private AuditLog() { }
+
+        public static AuditLog Create(string action, string entityType, string entityId, 
+            string? oldValues, string? newValues, string? performedBy)
+        {
+            return new AuditLog
+            {
+                Action = action,
+                EntityType = entityType,
+                EntityId = entityId,
+                OldValues = oldValues,
+                NewValues = newValues,
+                Timestamp = DateTime.UtcNow,
+                PerformedBy = performedBy
+            };
+        }
+    }
+}
+```
+
+---
+
+#### **10.2. IAuditLogRepository.cs** + Implementation
+
+Tạo interface và implementation trong Application/Infrastructure layers.
+
+---
+
+### **📋 BƯỚC 11: TẠO DATABASE MIGRATION**
+
+```bash
+cd TodoApp.Infrastructure
+dotnet ef migrations add AddAuditLogsTable --startup-project ..\TodoApp.WebAPI
+dotnet ef database update --startup-project ..\TodoApp.WebAPI
+```
+
+---
+
+### **📋 BƯỚC 12: TEST**
+
+#### **12.1. Build project**
+```bash
+cd TodoApp.WebAPI
+dotnet build
+```
+
+#### **12.2. Run application**
+```bash
+dotnet run
+```
+
+#### **12.3. Test tạo Genre**
+```http
+POST https://localhost:7xxx/api/genres
+Content-Type: application/json
+
+{
+  "nameGenre": "Test Event Domain"
+}
+```
+
+#### **12.4. Kiểm tra logs**
+```
+✅ Domain Event: Genre 'Test Event Domain' (ID: 5) created
+🗑️ [CACHE] Clearing cache after Genre creation
+📝 [AUDIT] Recording CREATE for Genre ID: 5
+📧 [NOTIFICATION] Sending email for new Genre
+```
+
+---
+
+## ✅ **CHECKLIST HOÀN THÀNH**
+
+| # | Bước | Status |
+|---|------|--------|
+| 1 | Domain Event Infrastructure | ✅ |
+| 2 | Genre Domain Events | ✅ |
+| 3 | Genre Entity (IHasDomainEvents) | ✅ |
+| 4 | Application Event Wrappers | ✅ |
+| 5 | Auto-Discovery Dispatcher | ✅ |
+| 6 | DbContext Integration | ✅ |
+| 7 | Event Handlers (4 handlers) | ✅ |
+| 8 | Command Handler Update | ✅ |
+| 9 | DI Registration | ✅ |
+| 10 | Supporting Entities | ✅ |
+| 11 | Database Migration | ✅ |
+| 12 | Testing | ✅ |
+
+---
+
+## 🎯 **LỢI ÍCH ĐẠT ĐƯỢC**
+
+### **1. Separation of Concerns**
+- CreateGenreCommandHandler chỉ lo business logic
+- Event handlers lo side effects riêng biệt
+
+### **2. Open/Closed Principle**
+- Thêm side effect mới → Tạo handler mới
+- Không sửa code cũ
+
+### **3. Single Responsibility**
+- 1 handler = 1 concern (logging/cache/audit/email)
+
+### **4. Testability**
+- Test business logic riêng
+- Test side effects riêng
+- Mock ít dependencies
+
+### **5. Clean Architecture**
+- Domain ZERO dependencies
+- Events flow: Domain → Application → Infrastructure
+
+---
+
+Made with ❤️ using Event-Driven Architecture (Level 5)

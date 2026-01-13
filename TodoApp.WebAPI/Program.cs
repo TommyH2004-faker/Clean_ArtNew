@@ -36,9 +36,16 @@ builder.Services.AddDbContext<TodoAppDbContext>(
 builder.Services.AddScoped<IBookRepository, BookRepositoryImpl>();
 builder.Services.AddScoped<IGenreRepository, GenreRepositoryImpl>();
 builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepositoryImpl>();
 
 // Register Domain Event Dispatcher (Auto-discovery cho Event-Driven Architecture)
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
+// Register Memory Cache cho Event Handlers
+builder.Services.AddMemoryCache();
+
+// Register Email Service (SMTP - Gmail/Outlook)
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 // Register Services
 builder.Services.AddScoped<IBookService, BookService>();

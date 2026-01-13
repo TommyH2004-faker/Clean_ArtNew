@@ -21,6 +21,7 @@ namespace TodoApp.Infrastructure.Persistence
         public DbSet<Genre> Genres { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<BookGenre> BookGenres { get; set; } = null!;
+        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +31,7 @@ namespace TodoApp.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new GenreConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new BookGenreConfiguration());
+            modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
         }
 
         /// <summary>

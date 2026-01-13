@@ -27,8 +27,13 @@ namespace TodoApp.Application.Features.GenreHandle.Command.Create
             // Tạo Genre bằng Domain Factory Method
             var newGenre = Genre.Create(request.NameGenre);
 
-            // Lưu vào database
+            // Lưu vào database (sau khi save, IdGenre sẽ có giá trị thật)
             await _genreRepository.AddGenreAsync(newGenre);
+
+            // Raise Domain Event SAU khi có ID thật từ database
+            // Event sẽ được dispatch trong lần SaveChanges tiếp theo
+            newGenre.RaiseCreatedEvent();
+            await _genreRepository.SaveChangesAsync();
 
             // Mapping Domain → DTO
             var genreDTO = new GenreResponseDTO

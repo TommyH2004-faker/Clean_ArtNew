@@ -31,10 +31,20 @@ namespace TodoApp.Domain.Entities
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Raise Domain Event
-            genre.AddDomainEvent(new GenreEvents.GenreCreated(genre.IdGenre, genre.NameGenre));
+            // KHÔNG raise event ở đây vì IdGenre = 0
+            // Event sẽ được raise sau khi SaveChanges qua RaiseCreatedEvent()
 
             return genre;
+        }
+
+        /// <summary>
+        /// Raise Created event SAU khi entity đã được save vào DB.
+        /// Gọi method này trong Handler sau khi SaveChanges thành công.
+        /// Lúc này IdGenre đã có giá trị thật từ database.
+        /// </summary>
+        public void RaiseCreatedEvent()
+        {
+            AddDomainEvent(new GenreEvents.GenreCreated(this.IdGenre, this.NameGenre));
         }
         
         // Domain Method - Update

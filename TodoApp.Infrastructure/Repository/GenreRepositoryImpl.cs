@@ -48,5 +48,10 @@ namespace TodoApp.Infrastructure.Repository
         {
             return await _context.Genres.ToListAsync();
         }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
     }
 }

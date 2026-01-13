@@ -11,5 +11,11 @@ namespace TodoApp.Application.Repository
         Task DeleteGenreAsync(Genre genre);
         Task<Genre?> GetNameGenreAsync(string nameGenre);
         Task<IEnumerable<Genre>> GetAllGenresAsync();
+        
+        /// <summary>
+        /// Lưu các thay đổi vào database.
+        /// Dùng để dispatch Domain Events sau khi entity đã có ID.
+        /// </summary>
+        Task SaveChangesAsync();
     }
 }
