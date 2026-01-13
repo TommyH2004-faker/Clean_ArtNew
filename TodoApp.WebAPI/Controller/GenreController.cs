@@ -68,7 +68,7 @@ namespace TodoApp.WebAPI.Controllers
         /// Tạo thể loại mới (Chỉ Admin)
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+ 
         public async Task<IActionResult> CreateGenre([FromBody] CreateGenreCommand command)
         {
             var result = await _mediator.Send(command);
@@ -78,7 +78,7 @@ namespace TodoApp.WebAPI.Controllers
                 return BadRequest(new { message = result.ErrorMessage, errors = result.Errors });
             }
 
-            // ✅ Trả về 201 Created với Location header
+            //  Trả về 201 Created với Location header
             return CreatedAtAction(
                 nameof(GetGenreById),
                 new { idGenre = result.Data?.IdGenre },
@@ -94,7 +94,6 @@ namespace TodoApp.WebAPI.Controllers
         /// Cập nhật thể loại (Chỉ Admin)
         /// </summary>
         [HttpPut("{idGenre}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateGenre(int idGenre, [FromBody] UpdateGenreCommand command)
         {
             // Đảm bảo ID từ route khớp với ID trong body
@@ -126,7 +125,6 @@ namespace TodoApp.WebAPI.Controllers
         /// Xóa thể loại (Chỉ Admin)
         /// </summary>
         [HttpDelete("{idGenre}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteGenre(int idGenre)
         {
             var command = new DeleteGenreCommand { IdGenre = idGenre };

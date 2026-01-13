@@ -117,7 +117,7 @@ rm -r Migrations
 ```bash
 # Initial setup
 dotnet ef migrations add InitCreate --startup-project ..\TodoApp.WebAPI
-
+dotnet ef migrations add AddTimeGenres --startup-project ..\TodoApp.WebAPI
 # Book & Genre
 dotnet ef migrations add CreateBookGenreTable --startup-project ..\TodoApp.WebAPI
 dotnet ef migrations add FixBook --startup-project ..\TodoApp.WebAPI
