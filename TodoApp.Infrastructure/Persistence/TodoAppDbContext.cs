@@ -22,6 +22,17 @@ namespace TodoApp.Infrastructure.Persistence
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<BookGenre> BookGenres { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+        
+        // New entities
+        public DbSet<CartItem> CartItems { get; set; } = null!;
+        public DbSet<Orders> Orders { get; set; } = null!;
+        public DbSet<OrderDetails> OrderDetails { get; set; } = null!;
+        public DbSet<Payment> Payments { get; set; } = null!;
+        public DbSet<Delivery> Deliveries { get; set; } = null!;
+        public DbSet<Review> Reviews { get; set; } = null!;
+        public DbSet<FavoriteBook> FavoriteBooks { get; set; } = null!;
+        public DbSet<Feedback> Feedbacks { get; set; } = null!;
+        public DbSet<Image> Images { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +43,17 @@ namespace TodoApp.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new BookGenreConfiguration());
             modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
+            
+            // New entity configurations
+            modelBuilder.ApplyConfiguration(new CartItemConfiguration());
+            modelBuilder.ApplyConfiguration(new OrdersConfiguration());
+            modelBuilder.ApplyConfiguration(new OrderDetailsConfiguration());
+            modelBuilder.ApplyConfiguration(new PaymentConfiguration());
+            modelBuilder.ApplyConfiguration(new DeliveryConfiguration());
+            modelBuilder.ApplyConfiguration(new ReviewConfiguration());
+            modelBuilder.ApplyConfiguration(new FavoriteBookConfiguration());
+            modelBuilder.ApplyConfiguration(new FeedbackConfiguration());
+            modelBuilder.ApplyConfiguration(new ImageConfiguration());
         }
 
         /// <summary>

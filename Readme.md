@@ -128,6 +128,7 @@ dotnet ef migrations add FixConfigv2 --startup-project ..\TodoApp.WebAPI
 dotnet ef migrations add DeleteIdUser --startup-project ..\TodoApp.WebAPI
 dotnet ef migrations add JwtProperty --startup-project ..\TodoApp.WebAPI
 dotnet ef migrations add addColumnRole --startup-project ..\TodoApp.WebAPI
+dotnet ef migrations add AddEntitiesPJ --startup-project ..\TodoApp.WebAPI
 ```
 dotnet ef migrations add AuditCode --startup-project ..\TodoApp.WebAPI
 ### **Tips: Xử lý lỗi Migration**

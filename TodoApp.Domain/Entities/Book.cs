@@ -16,7 +16,12 @@ namespace TodoApp.Domain.Entities
         public string? UrlImage { get; private set; } = null;
         public DateTime? CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }
+        
+        // Navigation properties
         public ICollection<BookGenre> BookGenres { get; private set; }= new List<BookGenre>();
+        public ICollection<Image> Images { get; private set; } = new List<Image>();
+        public ICollection<Review> Reviews { get; private set; } = new List<Review>();
+        public ICollection<FavoriteBook> FavoriteBooks { get; private set; } = new List<FavoriteBook>();
 
 
         private Book() { }

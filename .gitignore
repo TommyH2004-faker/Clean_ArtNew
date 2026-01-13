@@ -1,0 +1,4 @@
+# Ignore app settings
+appsettings.Development.json
+appsettings.Production.json
+secrets.json

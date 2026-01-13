@@ -40,6 +40,7 @@ namespace TodoApp.Infrastructure.Configuration
                    .IsRequired(false);
             builder.Property(u => u.IdUser)
                    .ValueGeneratedOnAdd();
+              
         }
     }
 }
