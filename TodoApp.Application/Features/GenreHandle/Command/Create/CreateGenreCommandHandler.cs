@@ -1,6 +1,6 @@
 using MediatR;
 using TodoApp.Application.Common;
-using TodoApp.Application.DTOs;
+using TodoApp.Application.DTOs.GenreDTOs;
 using TodoApp.Application.Repository;
 using TodoApp.Domain.Entities;
 

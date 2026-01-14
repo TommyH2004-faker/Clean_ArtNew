@@ -21,6 +21,9 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add SignalR for realtime notifications
+builder.Services.AddSignalR();
+
 // Configure Database
 var serverVersion = new MySqlServerVersion(new Version(8, 0, 29));
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -37,6 +40,7 @@ builder.Services.AddScoped<IBookRepository, BookRepositoryImpl>();
 builder.Services.AddScoped<IGenreRepository, GenreRepositoryImpl>();
 builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepositoryImpl>();
+builder.Services.AddScoped<IOrderRepository, OrderRepositoryImpl>();
 
 // Register Domain Event Dispatcher (Auto-discovery cho Event-Driven Architecture)
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
@@ -46,6 +50,9 @@ builder.Services.AddMemoryCache();
 
 // Register Email Service (SMTP - Gmail/Outlook)
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
+// Register SignalR Notification Service
+builder.Services.AddScoped<INotificationService, TodoApp.Infrastructure.Services.SignalRNotificationService<TodoApp.WebAPI.Hubs.NotificationHub>>();
 
 // Register Services
 builder.Services.AddScoped<IBookService, BookService>();
@@ -78,6 +85,18 @@ builder.Services.AddAuthentication(options =>
             Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!))
     };
 });
+// CORS cho port 5173 (React frontend)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontendApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
 
 builder.Services.AddAuthorization();
 //  MediatR - CQRS Pattern + Domain Events
@@ -103,9 +122,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// IMPORTANT: CORS must be before Authentication and Authorization
+app.UseCors("AllowFrontendApp");
+
 app.UseHttpsRedirection();
- app.UseAuthentication();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Map SignalR Hub
+app.MapHub<TodoApp.WebAPI.Hubs.NotificationHub>("/notificationHub");
 
 app.Run();

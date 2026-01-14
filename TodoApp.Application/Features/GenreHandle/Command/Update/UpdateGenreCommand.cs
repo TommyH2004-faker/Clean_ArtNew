@@ -1,7 +1,6 @@
 using MediatR;
 using TodoApp.Application.Common;
-using TodoApp.Application.DTOs;
-
+using TodoApp.Application.DTOs.GenreDTOs;
 namespace TodoApp.Application.Features.GenreHandle.Command.Update
 {
     public class UpdateGenreCommand : IRequest<Result<GenreResponseDTO>>

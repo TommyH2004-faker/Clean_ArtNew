@@ -1,6 +1,6 @@
 using MediatR;
 using TodoApp.Application.Common;
-using TodoApp.Application.DTOs;
+using TodoApp.Application.DTOs.GenreDTOs;
 using TodoApp.Application.Repository;
 
 namespace TodoApp.Application.Features.GenreHandle.Command.Update

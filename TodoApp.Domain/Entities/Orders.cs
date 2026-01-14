@@ -1,10 +1,14 @@
+using TodoApp.Domain.Common;
+using TodoApp.Domain.Events;
+using static TodoApp.Domain.Events.OrderEvents;
+
 namespace TodoApp.Domain.Entities
 {
     /// <summary>
     /// Aggregate Root: Orders (Đơn hàng)
     /// Quản lý toàn bộ lifecycle của một đơn hàng
     /// </summary>
-    public class Orders
+    public class Orders : IHasDomainEvents
     {
         public int IdOrder { get; private set; }
         public int IdUser { get; private set; }
@@ -20,10 +24,30 @@ namespace TodoApp.Domain.Entities
         public Payment? Payment { get; private set; }
         public Delivery? Delivery { get; private set; }
 
+        // Domain Events Support
+        private readonly List<IDomainEvent> _domainEvents = new();
+        public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+        public void AddDomainEvent(IDomainEvent domainEvent)
+        {
+            _domainEvents.Add(domainEvent);
+        }
+
+        public void RemoveDomainEvent(IDomainEvent domainEvent)
+        {
+            _domainEvents.Remove(domainEvent);
+        }
+
+        public void ClearDomainEvents()
+        {
+            _domainEvents.Clear();
+        }
+
         private Orders() { }
 
         /// <summary>
         /// Factory method: Tạo đơn hàng mới
+        /// KHÔNG raise event ở đây vì IdOrder = 0
         /// </summary>
         public static Orders Create(int idUser, string? note = null)
         {
@@ -38,6 +62,27 @@ namespace TodoApp.Domain.Entities
                 Note = note,
                 CreatedAt = DateTime.UtcNow
             };
+        }
+
+        /// <summary>
+        /// Raise OrderCreated event SAU khi order đã được save vào DB.
+        /// Lúc này IdOrder đã có giá trị thật và OrderDetails đã được thêm.
+        /// </summary>
+        public void RaiseCreatedEvent()
+        {
+            var orderDetailsInfo = OrderDetails.Select(od => new OrderDetailInfo(
+                od.IdBook,
+                od.Quantity,
+                od.Price,
+                od.Subtotal
+            )).ToList();
+
+            AddDomainEvent(new OrderCreated(
+                this.IdOrder,
+                this.IdUser,
+                this.CreatedAt,
+                orderDetailsInfo
+            ));
         }
 
         /// <summary>
@@ -75,18 +120,24 @@ namespace TodoApp.Domain.Entities
 
             Status = "Confirmed";
             UpdatedAt = DateTime.UtcNow;
+
+            // Raise Domain Event
+            AddDomainEvent(new OrderConfirmed(this.IdOrder, DateTime.UtcNow));
         }
 
         /// <summary>
         /// Business logic: Bắt đầu giao hàng
         /// </summary>
-        public void StartShipping()
+        public void StartShipping(string? trackingNumber = null)
         {
             if (Status != "Confirmed")
                 throw new InvalidOperationException($"Cannot start shipping for order with status {Status}");
 
             Status = "Shipping";
             UpdatedAt = DateTime.UtcNow;
+
+            // Raise Domain Event
+            AddDomainEvent(new OrderShipped(this.IdOrder, DateTime.UtcNow, trackingNumber));
         }
 
         /// <summary>
@@ -99,6 +150,9 @@ namespace TodoApp.Domain.Entities
 
             Status = "Delivered";
             UpdatedAt = DateTime.UtcNow;
+
+            // Raise Domain Event
+            AddDomainEvent(new OrderDelivered(this.IdOrder, DateTime.UtcNow));
         }
 
         /// <summary>
@@ -115,6 +169,9 @@ namespace TodoApp.Domain.Entities
             Status = "Cancelled";
             Note = string.IsNullOrEmpty(Note) ? reason : $"{Note}\nCancellation: {reason}";
             UpdatedAt = DateTime.UtcNow;
+
+            // Raise Domain Event
+            AddDomainEvent(new OrderCancelled(this.IdOrder, DateTime.UtcNow, reason));
         }
 
         /// <summary>

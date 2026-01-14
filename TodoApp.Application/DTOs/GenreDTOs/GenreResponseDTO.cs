@@ -1,4 +1,4 @@
-namespace TodoApp.Application.DTOs
+namespace TodoApp.Application.DTOs.GenreDTOs
 {
     public class GenreResponseDTO
     {
