@@ -35,6 +35,8 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (email: string, password: string) =>
     api.post('/api/auth/login', { email, password }),
+  activate: (data: { userId: number; activationCode: string }) =>
+    api.post('/api/auth/activate', data),
 }
 
 // Orders API

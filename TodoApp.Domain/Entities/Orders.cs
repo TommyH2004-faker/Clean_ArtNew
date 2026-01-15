@@ -74,7 +74,8 @@ namespace TodoApp.Domain.Entities
                 od.IdBook,
                 od.Quantity,
                 od.Price,
-                od.Subtotal
+                od.Subtotal,
+                od.Book?.NameBook ?? string.Empty
             )).ToList();
 
             AddDomainEvent(new OrderCreated(

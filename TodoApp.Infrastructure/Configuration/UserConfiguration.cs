@@ -13,15 +13,12 @@ namespace TodoApp.Infrastructure.Configuration
             builder.HasKey(u => u.IdUser);
 
             builder.Property(u => u.FirstName)
-                   .IsRequired()
                    .HasMaxLength(100);
 
             builder.Property(u => u.LastName)
-                   .IsRequired()
                    .HasMaxLength(100);
 
             builder.Property(u => u.Email)
-                   .IsRequired()
                    .HasMaxLength(255);
 
             builder.Property(u => u.Username)
@@ -36,8 +33,7 @@ namespace TodoApp.Infrastructure.Configuration
 
             builder.Property(u => u.ActivationCode)
                    .HasMaxLength(100);
-            builder.Property(u => u.Enabled)
-                   .IsRequired(false);
+            builder.Property(u => u.Enabled);
             builder.Property(u => u.IdUser)
                    .ValueGeneratedOnAdd();
               

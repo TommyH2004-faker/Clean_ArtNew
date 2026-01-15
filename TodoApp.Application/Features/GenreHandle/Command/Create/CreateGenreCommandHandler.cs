@@ -17,7 +17,6 @@ namespace TodoApp.Application.Features.GenreHandle.Command.Create
 
         public async Task<Result<GenreResponseDTO>> Handle(CreateGenreCommand request, CancellationToken cancellationToken)
         {
-            // Kiểm tra tên thể loại đã tồn tại chưa
             var existingGenre = await _genreRepository.GetNameGenreAsync(request.NameGenre);
             if (existingGenre != null)
             {
@@ -27,12 +26,9 @@ namespace TodoApp.Application.Features.GenreHandle.Command.Create
             // Tạo Genre bằng Domain Factory Method
             var newGenre = Genre.Create(request.NameGenre);
 
-            // Lưu vào database (sau khi save, IdGenre sẽ có giá trị thật)
+        
             await _genreRepository.AddGenreAsync(newGenre);
 
-            // Raise Domain Event SAU khi có ID thật từ database
-            // Event sẽ được dispatch trong lần SaveChanges tiếp theo
-            newGenre.RaiseCreatedEvent();
             await _genreRepository.SaveChangesAsync();
 
             // Mapping Domain → DTO

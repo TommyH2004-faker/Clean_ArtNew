@@ -11,5 +11,6 @@ namespace TodoApp.Application.Repository
         Task UpdateUserAsync(User user);
         Task DeleteUserAsync(User user);
         Task<IEnumerable<User>> GetAllUsersAsync();
+        Task SaveChangesAsync();
     }
 }

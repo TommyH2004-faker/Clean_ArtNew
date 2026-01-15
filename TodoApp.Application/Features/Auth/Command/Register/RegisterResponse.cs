@@ -1,4 +1,4 @@
-namespace TodoApp.Application.Features.Auth.Command;
+namespace TodoApp.Application.Features.Auth.Command.Register;
 
 public class RegisterResponse
 {

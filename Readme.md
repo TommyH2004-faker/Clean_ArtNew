@@ -101,6 +101,7 @@ dotnet ef migrations add <MigrationName> --startup-project ..\TodoApp.WebAPI
 ```bash
 dotnet ef database update --startup-project ..\TodoApp.WebAPI
 ```
+dotnet ef migrations remove --startup-project ..\TodoApp.WebAPI
 
 ### **Xóa Database (Cẩn thận!)**
 ```bash
@@ -112,9 +113,10 @@ Remove-Item -Path "Migrations" -Recurse -Force
 # Hoặc (Linux/Mac):
 rm -r Migrations
 ```
-
+dotnet ef migrations add FixAddLoadUser --startup-project ..\TodoApp.WebAPI
 ### **Lịch sử Migrations đã tạo**
 ```bash
+dotnet ef migrations add ReloadUser --startup-project ..\TodoApp.WebAPI
 # Initial setup
 dotnet ef migrations add InitCreate --startup-project ..\TodoApp.WebAPI
 dotnet ef migrations add AddTimeGenres --startup-project ..\TodoApp.WebAPI
@@ -2081,5 +2083,51 @@ Content-Type: application/json
 - Events flow: Domain → Application → Infrastructure
 
 ---
+📱 Client: POST /api/auth/register
+    ↓
+RegisterCommandHandler
+    ├─ var user = User.Register(...)
+    ├─ await AddUserAsync(user)  // IdUser = 42
+    ├─ user.RaiseRegisteredEvent()  // _domainEvents = [UserRegistered]
+    └─ await SaveChangesAsync()  ← GỌI HÀM NÀY!
+        ↓
+┌───────────────────────────────────────────────────────┐
+│ TodoAppDbContext.SaveChangesAsync()                   │
+├───────────────────────────────────────────────────────┤
+│                                                       │
+│ 1️⃣ Tìm entities có events                            │
+│    → [user]                                           │
+│                                                       │
+│ 2️⃣ Lấy events                                         │
+│    → [UserRegistered(42, "john@...", "123456")]      │
+│                                                       │
+│ 3️⃣ Clear events                                       │
+│    user._domainEvents = []                            │
+│                                                       │
+│ 4️⃣ Save DB                                            │
+│    INSERT INTO Users ... → IdUser = 42                │
+│                                                       │
+│ 5️⃣ Dispatch events                                    │
+│    DomainEventDispatcher                              │
+│    ├─ Tìm wrapper: UserRegisteredEvent               │
+│    └─ MediatR.Publish()                               │
+│        ├─ UserNotificationHandler → Gửi email ✉️     │
+│        └─ UserAuditLogHandler → Ghi log 📝           │
+└───────────────────────────────────────────────────────┘
 
+1. Command → Handler
+2. Handler → Business logic
+3. Handler → SaveChangesAsync() ← TRIGGER
+4. DbContext override → Lấy events
+5. DbContext → Commit DB
+6. DbContext → EventDispatcher
+7. EventDispatcher → Tìm wrapper (reflection)
+8. EventDispatcher → MediatR.Publish()
+9. MediatR → Tìm handlers
+10. MediatR → Task.WhenAll() (parallel)
+11. Handlers → Chạy song song
+12. Handlers → DONE
+13. SaveChangesAsync() → Return
+14. Command Handler → Return
+15. Controller → Return response
 Made with ❤️ using Event-Driven Architecture (Level 5)

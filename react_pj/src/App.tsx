@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
+import ActivatePage from './pages/ActivatePage';
 import { initializeSignalR, disconnectSignalR } from './Api/signalr';
 import { useNotificationStore } from './hook/useNotification';
 import type { Notification } from './Model/Order';
@@ -48,6 +49,7 @@ function App() {
         <Route path="/admin/orders" element={<OrdersPage />} />
         <Route path="/admin/orders/:id" element={<OrderDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/activate" element={<ActivatePage />} />
         <Route path="/" element={<Home />} />
       </Routes>
       <Toaster

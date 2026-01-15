@@ -42,15 +42,15 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers
             // 1. SignalR Realtime Notification (cho chuông 🔔)
             var realtimeNotification = new
             {
-                Type = "ORDER_CREATED",
-                OrderId = notification.IdOrder,
-                UserId = notification.IdUser,
-                TotalAmount = totalAmount,
-                ItemCount = notification.OrderDetails.Count,
-                TotalQuantity = notification.OrderDetails.Sum(od => od.Quantity),
-                Timestamp = notification.OrderDate,
-                Message = $"Đơn hàng mới #{notification.IdOrder} - {totalAmount:C}",
-                Url = $"/admin/orders/{notification.IdOrder}" // URL để redirect khi click notification
+                type = "ORDER_CREATED",
+                orderId = notification.IdOrder,
+                userId = notification.IdUser,
+                totalAmount = totalAmount,
+                itemCount = notification.OrderDetails.Count,
+                totalQuantity = notification.OrderDetails.Sum(od => od.Quantity),
+                timestamp = notification.OrderDate,
+                message = $"Đơn hàng mới #{notification.IdOrder} - {totalAmount:C}",
+                url = $"/admin/orders/{notification.IdOrder}" // URL để redirect khi click notification
             };
 
             // Gửi đến tất cả admin đang online
@@ -59,7 +59,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers
 
             // 2. Email Notification (backup)
             var itemsList = string.Join("<br/>", notification.OrderDetails.Select(od =>
-                $"&nbsp;&nbsp;&nbsp;📦 Book #{od.IdBook}: {od.Quantity} x {od.Price:C} = {od.Subtotal:C}"));
+                $"&nbsp;&nbsp;&nbsp;📦 Book #{od.IdBook}: {od.Quantity} x {od.Price:C} = {od.Subtotal:C} x {od.NameBook}  "));
 
             var subject = $"🛒 Đơn hàng mới: #{notification.IdOrder}";
             var body = $@"

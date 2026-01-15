@@ -2,7 +2,7 @@ using MediatR;
 using TodoApp.Application.Repository;
 using TodoApp.Domain.Entities;
 
-namespace TodoApp.Application.Features.Auth.Command
+namespace TodoApp.Application.Features.Auth.Command.Register
 {
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterResponse>
     {
@@ -33,22 +33,26 @@ namespace TodoApp.Application.Features.Auth.Command
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             // Tạo user mới sử dụng factory method
-            var newUser = User.CreateSimple(
+            var newUser = User.Register(
                 username: request.Username,
                 email: request.Email,
-                passwordHash: hashedPassword,
+                passwordHash: hashedPassword, 
                 role: "User"
             );
 
             // Lưu vào database
             await _userRepository.AddUserAsync(newUser);
+            
+            // ⭐ Raise event SAU khi đã lưu (có IdUser)
+            newUser.RaiseRegisteredEvent();
+            await _userRepository.SaveChangesAsync(); // Dispatch events
 
             return new RegisterResponse
             {
                 UserId = newUser.IdUser,
                 Username = newUser.Username,
                 Email = newUser.Email,
-                Message = "User registered successfully"
+                Message = "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản."
             };
         }
     }

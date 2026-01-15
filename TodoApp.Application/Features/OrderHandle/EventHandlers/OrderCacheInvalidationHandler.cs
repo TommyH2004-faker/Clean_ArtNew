@@ -6,7 +6,7 @@ using TodoApp.Application.Events;
 namespace TodoApp.Application.Features.OrderHandle.EventHandlers
 {
     /// <summary>
-    /// Event Handler: Cache invalidation cho Order events
+    /// Event Handler: Xóa cache cho các sự kiện đơn hàng
     /// </summary>
     public class OrderCacheInvalidationHandler :
         INotificationHandler<OrderCreatedEvent>,
@@ -28,35 +28,35 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers
 
         public Task Handle(OrderCreatedEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing order cache after creation - Order #{OrderId}", notification.IdOrder);
+            _logger.LogInformation("🗑️ [CACHE] Xóa cache đơn hàng sau khi tạo - Đơn hàng #{OrderId}", notification.IdOrder);
             ClearCache(notification.IdOrder, notification.IdUser);
             return Task.CompletedTask;
         }
 
         public Task Handle(OrderConfirmedEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing order cache after confirmation - Order #{OrderId}", notification.IdOrder);
+            _logger.LogInformation("🗑️ [CACHE] Xóa cache đơn hàng sau khi xác nhận - Đơn hàng #{OrderId}", notification.IdOrder);
             ClearCache(notification.IdOrder, null);
             return Task.CompletedTask;
         }
 
         public Task Handle(OrderShippedEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing order cache after shipping - Order #{OrderId}", notification.IdOrder);
+            _logger.LogInformation("🗑️ [CACHE] Xóa cache đơn hàng sau khi giao hàng - Đơn hàng #{OrderId}", notification.IdOrder);
             ClearCache(notification.IdOrder, null);
             return Task.CompletedTask;
         }
 
         public Task Handle(OrderDeliveredEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing order cache after delivery - Order #{OrderId}", notification.IdOrder);
+            _logger.LogInformation("🗑️ [CACHE] Xóa cache đơn hàng sau khi hoàn thành - Đơn hàng #{OrderId}", notification.IdOrder);
             ClearCache(notification.IdOrder, null);
             return Task.CompletedTask;
         }
 
         public Task Handle(OrderCancelledEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing order cache after cancellation - Order #{OrderId}", notification.IdOrder);
+            _logger.LogInformation("🗑️ [CACHE] Xóa cache đơn hàng sau khi hủy - Đơn hàng #{OrderId}", notification.IdOrder);
             ClearCache(notification.IdOrder, null);
             return Task.CompletedTask;
         }

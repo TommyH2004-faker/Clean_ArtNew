@@ -1,190 +1,154 @@
-using System.Runtime.InteropServices;
+using TodoApp.Domain.Common;
+using TodoApp.Domain.Events;
+using static TodoApp.Domain.Events.UserEvents;
 
 namespace TodoApp.Domain.Entities
 {
-    public class User
+    public class User : IHasDomainEvents
     {
         public int IdUser { get; private set; }
-        public DateTime? DateOfBirth { get; private set; }
-        public string DeliveryAddress { get; private set; }  = null!;
-        public string Email { get; private set; } = null!;
-        public string FirstName { get; private set; }  = null!;
-        public string LastName { get; private set; } = null!;
-        public string Gender { get; private set; } = null!;
-        public string Password { get; private set; } = null!;
-        public string PhoneNumber { get; private set; } = null!;
+
         public string Username { get; private set; } = null!;
-        public string Avatar { get; private set; } = null!;
-        public string? ActivationCode { get; private set; } = null;
-        public bool? Enabled { get; private set; }
-        public string Role { get; set; } = "User";
-         public string? RefreshToken { get; private set; }
+        public string Email { get; private set; } = null!;
+        public string PasswordHash { get; private set; } = null!;
+
+        public string? FirstName { get; private set; }
+        public string? LastName { get; private set; }
+        public string? PhoneNumber { get; private set; }
+        public string? DeliveryAddress { get; private set; }
+        public string? Gender { get; private set; }
+        public string? Avatar { get; private set; }
+        public DateTime? DateOfBirth { get; private set; }
+
+        public string Role { get; private set; } = "User";
+        public string? ActivationCode { get; private set; }
+        public bool Enabled { get; private set; } 
         public DateTime? RefreshTokenExpiry { get; private set; }
-        private User() { }
-        
-        // Method đơn giản cho Register (chỉ cần username, email, password)
-        public static User CreateSimple(string username, string email, string passwordHash, string role = "User")
+        public string? RefreshToken { get; private set; }
+        private readonly List<IDomainEvent> _domainEvents = new();
+        public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents;
+
+      
+
+        private User() { } // EF
+
+        public static User Register(
+        string username,
+        string email,
+        string passwordHash,
+        string role = "User")
         {
             if (string.IsNullOrWhiteSpace(username))
-                throw new ArgumentException("Username cannot be empty", nameof(username));
+                throw new ArgumentException("Username is required");
 
             if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email cannot be empty", nameof(email));
+                throw new ArgumentException("Email is required");
 
             if (string.IsNullOrWhiteSpace(passwordHash))
-                throw new ArgumentException("Password cannot be empty", nameof(passwordHash));
+                throw new ArgumentException("PasswordHash is required");
 
-            return new User
+            // Tạo activation code 6 số
+            var activationCode = new Random().Next(100000, 999999).ToString();
+
+            var user = new User
             {
                 Username = username,
                 Email = email,
-                Password = passwordHash,
+                PasswordHash = passwordHash,
                 Role = role,
-                FirstName = string.Empty,
-                LastName = string.Empty,
-                PhoneNumber = string.Empty,
-                DeliveryAddress = string.Empty,
-                Gender = string.Empty,
-                Avatar = string.Empty,
-                Enabled = true
-            };
-        }
-        
-        public static User Create(string firstName, string lastName, string username, string email, 
-            string password, string phoneNumber, string deliveryAddress, string gender,string avatar, DateTime? dateOfBirth = null,
-            string activationCode = "",  bool? enabled = false)
-        {
-            if (string.IsNullOrWhiteSpace(firstName))
-                throw new ArgumentException("FirstName cannot be empty", nameof(firstName));
-
-            if (string.IsNullOrWhiteSpace(lastName))
-                throw new ArgumentException("LastName cannot be empty", nameof(lastName));
-
-            if (string.IsNullOrWhiteSpace(username))
-                throw new ArgumentException("Username cannot be empty", nameof(username));
-
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email cannot be empty", nameof(email));
-
-            if (string.IsNullOrWhiteSpace(password))
-                throw new ArgumentException("Password cannot be empty", nameof(password));
-
-            if (string.IsNullOrWhiteSpace(phoneNumber))
-                throw new ArgumentException("PhoneNumber cannot be empty", nameof(phoneNumber));
-
-            if (string.IsNullOrWhiteSpace(deliveryAddress))
-                throw new ArgumentException("DeliveryAddress cannot be empty", nameof(deliveryAddress));
-
-            if (string.IsNullOrWhiteSpace(gender))
-                throw new ArgumentException ("Gender cannot be empty", nameof(gender));
-            if (string.IsNullOrWhiteSpace(avatar))
-                throw new ArgumentException("Avatar cannot be empty", nameof(avatar));
-            return new User
-            {
-                FirstName = firstName,
-                LastName = lastName,
-                Username = username,
-                Email = email,
-                Password = password,
-                PhoneNumber = phoneNumber,
-                DeliveryAddress = deliveryAddress,
-                Gender = gender,
-                Avatar = avatar,
-                DateOfBirth = dateOfBirth,
                 ActivationCode = activationCode,
-                
+                Enabled = false // Chưa kích hoạt
             };
+
+            return user;
         }
-        public void UpdateUser(string firstName, string lastName, string username, string email,
-            string password, string phoneNumber, string deliveryAddress, string gender, string avatar, DateTime? dateOfBirth = null)
+
+        // Raise event SAU khi đã lưu vào DB (có IdUser)
+        public void RaiseRegisteredEvent()
         {
-            if (string.IsNullOrWhiteSpace(firstName))
-                throw new ArgumentException("FirstName cannot be empty", nameof(firstName));
-
-            if (string.IsNullOrWhiteSpace(lastName))
-                throw new ArgumentException("LastName cannot be empty", nameof(lastName));
-
-            if (string.IsNullOrWhiteSpace(username))
-                throw new ArgumentException("Username cannot be empty", nameof(username));
-
-            if (!IsValidEmail(email))
-                throw new ArgumentException("Invalid email format", nameof(email));
-
-            if (string.IsNullOrWhiteSpace(password))
-                throw new ArgumentException("Password cannot be empty", nameof(password));
-
-            if (string.IsNullOrWhiteSpace(phoneNumber))
-                throw new ArgumentException("PhoneNumber cannot be empty", nameof(phoneNumber));
-
-            if (string.IsNullOrWhiteSpace(deliveryAddress))
-                throw new ArgumentException("DeliveryAddress cannot be empty", nameof(deliveryAddress));
-
-            if (string.IsNullOrWhiteSpace(gender))
-                throw new ArgumentException("Gender cannot be empty", nameof(gender));
-            if (string.IsNullOrWhiteSpace(avatar))
-                throw new ArgumentException("Avatar cannot be empty", nameof(avatar));  
-            this.FirstName = firstName;
-            this.LastName = lastName;
-            this.Username = username;
-            this.Email = email;
-            this.Password = password;
-            this.PhoneNumber = phoneNumber;
-            this.DeliveryAddress = deliveryAddress;
-            this.Gender = gender;
-            this.Avatar = avatar;
-            this.DateOfBirth = dateOfBirth;
+            AddDomainEvent(new UserRegistered(
+                this.IdUser,
+                this.Email,
+                this.Username,
+                this.ActivationCode!
+            ));
         }
 
-        public void DeleteUser(int idUser)
+
+        // 👉 Business behavior
+        public void UpdateProfile(
+            string firstName,
+            string lastName,
+            string phoneNumber,
+            string deliveryAddress,
+            string gender,
+            string avatar,
+            DateTime? dateOfBirth)
         {
-            if (this.IdUser != idUser)
-            {
-                throw new ArgumentException("User ID does not match.", nameof(idUser));
-            }
+            if (!Enabled)
+                throw new InvalidOperationException("Account not activated");
+
+            FirstName = firstName;
+            LastName = lastName;
+            PhoneNumber = phoneNumber;
+            DeliveryAddress = deliveryAddress;
+            Gender = gender;
+            Avatar = avatar;
+            DateOfBirth = dateOfBirth;
         }
-         // Method để update password
-        public void UpdatePassword(string newPasswordHash)
+
+        public void ChangePassword(string newPasswordHash)
         {
             if (string.IsNullOrWhiteSpace(newPasswordHash))
-                throw new ArgumentException("Password hash cannot be empty", nameof(newPasswordHash));
+                throw new ArgumentException("PasswordHash required");
 
-            Password = newPasswordHash;
+            PasswordHash = newPasswordHash;
         }
 
-        // Method để update refresh token
-        public void SetRefreshToken(string refreshToken, DateTime expiry)
+        public void Activate()
         {
-            if (string.IsNullOrWhiteSpace(refreshToken))
-                throw new ArgumentException("Refresh token cannot be empty", nameof(refreshToken));
-
-            if (expiry <= DateTime.UtcNow)
-                throw new ArgumentException("Expiry must be in the future", nameof(expiry));
-
-            RefreshToken = refreshToken;
-            RefreshTokenExpiry = expiry;
+            if (Enabled)
+                throw new InvalidOperationException("User is already activated");
+            
+            Enabled = true;
+            ActivationCode = null;
+            
+            AddDomainEvent(new UserActivated(
+                this.IdUser,
+                this.Email,
+                DateTime.UtcNow
+            ));
         }
 
-        // Method để clear refresh token (khi logout)
-        public void ClearRefreshToken()
+        public void ChangeRole(string role)
         {
-            RefreshToken = null;
-            RefreshTokenExpiry = null;
-        }
-        // Dùng để validate email
-        private static bool IsValidEmail(string email)
-        {
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-    
-    
+            if (string.IsNullOrWhiteSpace(role))
+                throw new ArgumentException("Role required");
 
+            Role = role;
+        }
+
+        public void AddDomainEvent(IDomainEvent domainEvent)
+        {
+            _domainEvents.Add(domainEvent);
+        }
+
+        public void RemoveDomainEvent(IDomainEvent domainEvent)
+        {
+            _domainEvents.Remove(domainEvent);
+        }
+
+        public void ClearDomainEvents()
+        {
+            _domainEvents.Clear();
+        }
+
+        public void SetRefreshToken(string refreshToken, DateTime refreshTokenExpiry)
+        {
+            // Lưu refresh token và expiry
+            // Giả sử có các thuộc tính RefreshToken và RefreshTokenExpiry
+            this.RefreshToken = refreshToken;
+            this.RefreshTokenExpiry = refreshTokenExpiry;
+        }
     }
 }

@@ -97,12 +97,14 @@ namespace TodoApp.Domain.Events
             public int Quantity { get; init; }
             public decimal Price { get; init; }
             public decimal Subtotal { get; init; }
-            public OrderDetailInfo(int idBook, int quantity, decimal price, decimal subtotal)
+            public string NameBook { get; init; }
+            public OrderDetailInfo(int idBook, int quantity, decimal price, decimal subtotal, string nameBook)
             {
                 IdBook = idBook;
                 Quantity = quantity;
                 Price = price;
                 Subtotal = subtotal;
+                NameBook = nameBook;
             }
         }
     }

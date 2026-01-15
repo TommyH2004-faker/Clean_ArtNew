@@ -26,7 +26,7 @@ namespace TodoApp.Application.Features.Auth.Command.Login
             }
 
             // Đổi mật khẩu sang hash và so sánh
-            var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
+            var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!isPasswordValid)
             {
                 throw new UnauthorizedAccessException("Invalid email or password");
@@ -43,6 +43,7 @@ namespace TodoApp.Application.Features.Auth.Command.Login
             // Lưu refresh token vào database
             user.SetRefreshToken(refreshToken, refreshTokenExpiry);
             await _userRepository.UpdateUserAsync(user);
+            await _userRepository.SaveChangesAsync();
 
             return new LoginResponse
             {

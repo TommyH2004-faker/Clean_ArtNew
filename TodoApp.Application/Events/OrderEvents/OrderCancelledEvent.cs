@@ -12,6 +12,12 @@ namespace TodoApp.Application.Events
         public OrderCancelled DomainEvent { get; }
         
         // Explicit interface implementation
+        /// <summary>
+        /// Lấy Domain Event bên trong wrapper
+        /// Lazy load để tránh truy cập không cần thiết
+        /// 
+        /// 
+        /// </summary>
         IDomainEvent IDomainEventWrapper.DomainEvent => DomainEvent;
         
         public int IdOrder => DomainEvent.IdOrder;
