@@ -11,7 +11,7 @@ namespace TodoApp.Application.Events
     {
         public OrderDelivered DomainEvent { get; }
         
-        // Explicit interface implementation
+        // dùng để hiện thực interface một cách rõ ràng
         IDomainEvent IDomainEventWrapper.DomainEvent => DomainEvent;
         
         public int IdOrder => DomainEvent.IdOrder;

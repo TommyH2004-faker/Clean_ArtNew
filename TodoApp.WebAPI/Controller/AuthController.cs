@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Application.Features.Auth.Command;
 using TodoApp.Application.Features.Auth.Command.Activate;
+using TodoApp.Application.Features.Auth.Command.Changepassword;
 using TodoApp.Application.Features.Auth.Command.Login;
 using TodoApp.Application.Features.Auth.Command.Refresh;
 using TodoApp.Application.Features.Auth.Command.Register;
@@ -74,6 +75,16 @@ public class AuthController : ControllerBase
     {
         var query = new GetUserByIdQuery(id);
         var response = await _mediator.Send(query);
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Đổi mật khẩu cho user đã đăng nhập
+    /// </summary>
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command)
+    {
+        var response = await _mediator.Send(command);
         return Ok(response);
     }
    

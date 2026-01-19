@@ -21,12 +21,13 @@ namespace TodoApp.Domain.Entities
 
         /// <summary>
         /// Factory method: Tạo OrderDetail mới
+        /// NOTE: idOrder có thể = 0 khi tạo mới (EF Core sẽ tự động gán FK sau khi save Order)
         /// </summary>
         public static OrderDetails Create(int idOrder, int idBook, int quantity, decimal price)
         {
-            if (idOrder <= 0)
-                throw new ArgumentException("Order ID must be positive", nameof(idOrder));
-
+            // NOTE: Không validate idOrder > 0 vì khi tạo Order mới, IdOrder vẫn = 0
+            // EF Core sẽ tự động gán IdOrder cho OrderDetails sau khi save Order
+            
             if (idBook <= 0)
                 throw new ArgumentException("Book ID must be positive", nameof(idBook));
 

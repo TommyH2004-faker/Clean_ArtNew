@@ -33,6 +33,7 @@ namespace TodoApp.Infrastructure.Persistence
         public DbSet<FavoriteBook> FavoriteBooks { get; set; } = null!;
         public DbSet<Feedback> Feedbacks { get; set; } = null!;
         public DbSet<Image> Images { get; set; } = null!;
+        public DbSet<Notification> Notifications { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -54,6 +55,7 @@ namespace TodoApp.Infrastructure.Persistence
             modelBuilder.ApplyConfiguration(new FavoriteBookConfiguration());
             modelBuilder.ApplyConfiguration(new FeedbackConfiguration());
             modelBuilder.ApplyConfiguration(new ImageConfiguration());
+            modelBuilder.ApplyConfiguration(new NotificationConfiguration());
         }
 
         /// <summary>
@@ -63,10 +65,13 @@ namespace TodoApp.Infrastructure.Persistence
         /// 
         /// Luồng xử lý:
         /// 1. Lấy entities có Domain Events
-        /// 2. Trích xuất events
+        /// 2. Trích xuất events (TRƯỚC khi save - IdOrder có thể = 0)
         /// 3. Clear events khỏi entities
-        /// 4. Save changes vào DB (đảm bảo data consistency)
-        /// 5. Dispatch events qua DomainEventDispatcher (auto-discovery)
+        /// 4. Save changes vào DB (đảm bảo data consistency, IdOrder được generate)
+        /// 5. Dispatch events qua DomainEventDispatcher (SAU khi save - IdOrder đã có giá trị)
+        /// 
+        /// ⚠️ LƯU Ý: Events được collect TRƯỚC save nhưng dispatch SAU save.
+        /// Nếu event cần IdOrder chính xác, phải raise event SAU SaveChanges.
         /// 
         /// ✅ Auto-discovery: Không cần khai báo thủ công khi thêm event mới!
         /// </summary>
@@ -79,6 +84,7 @@ namespace TodoApp.Infrastructure.Persistence
                 .ToList();
 
             // 2. Lấy tất cả Domain Events trước khi save
+            // ⚠️ Nếu entity mới (Added), IdOrder vẫn = 0 tại thời điểm này
             var domainEvents = entitiesWithEvents
                 .SelectMany(e => e.DomainEvents)
                 .ToList();
@@ -87,9 +93,11 @@ namespace TodoApp.Infrastructure.Persistence
             entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
 
             // 4. Lưu changes vào database TRƯỚC
+            // ✅ Sau bước này, IdOrder đã được generate từ DB
             var result = await base.SaveChangesAsync(cancellationToken);
 
             // 5. Dispatch events qua DomainEventDispatcher (tự động tìm wrapper)
+            // ✅ Tại thời điểm này, IdOrder đã có giá trị thật từ DB
             await _eventDispatcher.DispatchAllAsync(domainEvents, cancellationToken);
 
             return result;

@@ -1,8 +1,7 @@
 namespace TodoApp.Domain.Common
 {
     /// <summary>
-    /// Base record cho Domain Events - Pure domain, no infrastructure dependencies
-    /// Abstract class cung cấp implementation chung cho thuộc tính OccurredOn
+    /// // Base class cho tất cả events - tự động ghi thời gian
     /// </summary>
     public abstract record DomainEventBase : IDomainEvent
     {

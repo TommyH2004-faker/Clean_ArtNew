@@ -105,6 +105,15 @@ namespace TodoApp.Domain.Entities
             PasswordHash = newPasswordHash;
         }
 
+        public void RaisePasswordChangedEvent()
+        {
+            AddDomainEvent(new UserPasswordChanged(
+                this.IdUser,
+                this.Email,
+                DateTime.UtcNow
+            ));
+        }
+
         public void Activate()
         {
             if (Enabled)

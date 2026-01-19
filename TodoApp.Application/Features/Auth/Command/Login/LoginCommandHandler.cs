@@ -24,7 +24,10 @@ namespace TodoApp.Application.Features.Auth.Command.Login
             {
                 throw new UnauthorizedAccessException("Invalid email or password");
             }
-
+            if( !user.Enabled)
+            {
+                throw new UnauthorizedAccessException("Account not activated");
+            }
             // Đổi mật khẩu sang hash và so sánh
             var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!isPasswordValid)

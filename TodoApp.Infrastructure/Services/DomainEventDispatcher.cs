@@ -6,48 +6,31 @@ using TodoApp.Domain.Common;
 
 namespace TodoApp.Infrastructure.Services
 {
-    /// <summary>
-    /// Service tự động convert Domain Events → MediatR Notifications.
-    /// Sử dụng reflection để auto-discover event wrappers.
-    /// 
-    /// Convention: 
-    /// - Domain Event: GenreEvents.GenreCreated (Domain Layer)
-    /// - Wrapper: GenreCreatedEvent : IDomainEventWrapper<GenreCreated> (Application Layer)
-    /// 
-    /// Khi thêm event mới, chỉ cần tạo wrapper implement IDomainEventWrapper<T>,
-    /// DomainEventDispatcher sẽ tự động tìm và map.
-    /// </summary>
     public class DomainEventDispatcher : IDomainEventDispatcher
     {
         private readonly IMediator _mediator;
         
-        // Cache mapping: DomainEventType → WrapperType để tránh reflection mỗi lần
         private static readonly ConcurrentDictionary<Type, Type?> _eventWrapperCache = new();
         
-        // Cache constructor info để tạo instance nhanh hơn
         private static readonly ConcurrentDictionary<Type, ConstructorInfo?> _constructorCache = new();
 
         public DomainEventDispatcher(IMediator mediator)
         {
             _mediator = mediator;
         }
-
-        /// <summary>
-        /// Dispatch một domain event bằng cách tự động tìm wrapper phù hợp
-        /// </summary>
+         // Auto-discovery: Tự động tìm wrapper cho domain event
         public async Task DispatchAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
         {
+            // 1. Tìm wrapper phù hợp (VD: UserRegistered → UserRegisteredEvent)
             var notification = CreateNotification(domainEvent);
             
             if (notification != null)
             {
+                  // 2. Publish qua MediatR
                 await _mediator.Publish(notification, cancellationToken);
             }
         }
 
-        /// <summary>
-        /// Dispatch nhiều domain events
-        /// </summary>
         public async Task DispatchAllAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken cancellationToken = default)
         {
             foreach (var domainEvent in domainEvents)
@@ -56,19 +39,16 @@ namespace TodoApp.Infrastructure.Services
             }
         }
 
-        /// <summary>
-        /// Tạo INotification wrapper từ Domain Event
-        /// </summary>
         private INotification? CreateNotification(IDomainEvent domainEvent)
         {
             var domainEventType = domainEvent.GetType();
             
-            // Tìm wrapper type từ cache hoặc qua reflection
+        // Dùng Reflection tìm wrapper
+        // UserRegistered → tìm class implement IDomainEventWrapper<UserRegistered>
             var wrapperType = _eventWrapperCache.GetOrAdd(domainEventType, FindWrapperType);
             
             if (wrapperType == null)
             {
-                // Không tìm thấy wrapper → log warning (có thể thêm ILogger)
                 return null;
             }
 
@@ -80,7 +60,7 @@ namespace TodoApp.Infrastructure.Services
             {
                 return null;
             }
-
+            
             return constructor.Invoke(new object[] { domainEvent }) as INotification;
         }
 

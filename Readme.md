@@ -95,7 +95,7 @@ dotnet add package Pomelo.EntityFrameworkCore.MySql --version 8.0.2
 ### **Tạo Migration mới**
 ```bash
 dotnet ef migrations add <MigrationName> --startup-project ..\TodoApp.WebAPI
-```
+```dotnet ef migrations add AddNotification --startup-project ..\TodoApp.WebAPI
 
 ### **Áp dụng Migration vào Database**
 ```bash
@@ -2131,3 +2131,296 @@ RegisterCommandHandler
 14. Command Handler → Return
 15. Controller → Return response
 Made with ❤️ using Event-Driven Architecture (Level 5)
+
+🏗️ TỔNG QUAN KIẾN TRÚC DỰ ÁN TODOAPP (BOOKSTORE)
+📊 Kiến trúc tổng thể: Clean Architecture + CQRS + Event-Driven
+
+┌─────────────────────────────────────────────────────────────┐
+│                    PRESENTATION LAYER                        │
+│  ┌───────────────┐     ┌──────────────────────────────┐    │
+│  │  Controllers  │────▶│  GlobalExceptionFilter       │    │
+│  │  - AuthController    │  - Validation Errors          │    │
+│  │  - OrdersController  │  - Business Logic Errors      │    │
+│  │  - BookController    │  - Unauthorized              │    │
+│  └───────┬───────┘     └──────────────────────────────┘    │
+│          │ MediatR.Send()                                    │
+└──────────┼───────────────────────────────────────────────────┘
+           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   APPLICATION LAYER                          │
+│  ┌──────────────┐  ┌─────────────┐  ┌──────────────────┐  │
+│  │  Commands    │  │   Queries   │  │  Event Handlers  │  │
+│  │  - Create    │  │  - GetAll   │  │  - Notification  │  │
+│  │  - Update    │  │  - GetById  │  │  - AuditLog      │  │
+│  │  - Delete    │  │  - Filter   │  │  - Cache         │  │
+│  └──────┬───────┘  └──────┬──────┘  └────────▲─────────┘  │
+│         │                  │                   │             │
+│  ┌──────▼──────────────────▼───────┐    ┌─────┴─────────┐ │
+│  │   Command/Query Handlers        │    │ Event Wrappers│ │
+│  │  ┌────────────────────────┐     │    │ - UserReg..   │ │
+│  │  │ ValidationBehavior     │◀────┼────│ - OrderCre..  │ │
+│  │  │ (FluentValidation)     │     │    └───────────────┘ │
+│  │  └────────────────────────┘     │                       │
+│  └──────┬───────────────────────────┘                       │
+│         │ Repository Interfaces                             │
+└─────────┼───────────────────────────────────────────────────┘
+          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  INFRASTRUCTURE LAYER                        │
+│  ┌──────────────────────┐    ┌─────────────────────────┐   │
+│  │ Repository Impls     │    │  Services               │   │
+│  │ - UserRepository     │    │  - EmailService (SMTP)  │   │
+│  │ - OrderRepository    │    │  - JwtService           │   │
+│  │ - BookRepository     │    │  - DomainEventDispatcher│   │
+│  └──────┬───────────────┘    └──────────┬──────────────┘   │
+│         │                                │                   │
+│  ┌──────▼────────────────────────────────▼──────────────┐  │
+│  │          TodoAppDbContext (EF Core)                   │  │
+│  │  ┌──────────────────────────────────────────────┐    │  │
+│  │  │ Override SaveChangesAsync():                 │    │  │
+│  │  │  1. Collect Domain Events                    │    │  │
+│  │  │  2. Save to Database                        │    │  │
+│  │  │  3. Dispatch Events via DomainEventDispatcher│    │  │
+│  │  │  4. MediatR publishes to handlers           │    │  │
+│  │  └──────────────────────────────────────────────┘    │  │
+│  └───────────────────────────┬───────────────────────────┘  │
+│                              │                               │
+└──────────────────────────────┼───────────────────────────────┘
+                               ▼
+                    ┌────────────────────┐
+                    │   MySQL Database   │
+                    │   - Users          │
+                    │   - Orders         │
+                    │   - Books          │
+                    │   - AuditLogs      │
+                    └────────────────────┘
+
+
+# 🔄 LUỒNG XỬ LÝ REQUEST CHI TIẾT
+Ví dụ 1: User đăng ký (POST /api/auth/register)
+1️⃣ REQUEST từ Frontend
+   POST /api/auth/register
+   Body: { username, email, password, confirmPassword }
+   ↓
+2️⃣ CONTROLLER (AuthController)
+   [HttpPost("register")]
+   public async Task<IActionResult> Register([FromBody] RegisterCommand command)
+   {
+       var response = await _mediator.Send(command); // ← Gửi command
+       return Ok(response);
+   }
+   ↓
+3️⃣ MEDIATR PIPELINE
+   ┌─────────────────────────────────────┐
+   │ ValidationBehavior<TRequest>        │
+   │ - FluentValidation tự động          │
+   │ - RegisterCommandValidator          │
+   │   • Username required, 3-50 chars   │
+   │   • Email valid format              │
+   │   • Password min 6 chars            │
+   │   • ConfirmPassword match           │
+   └──────────┬──────────────────────────┘
+              │ ✅ Valid
+   ↓
+4️⃣ COMMAND HANDLER (RegisterCommandHandler)
+   public async Task<RegisterResponse> Handle(...)
+   {
+       // Check duplicate
+       var existing = await _userRepository.GetUserByEmailAsync(...);
+       if (existing != null) throw new InvalidOperationException("Email exists");
+       
+       // Hash password
+       var hashedPassword = BCrypt.HashPassword(password);
+       
+       // Create entity với Factory Method
+       var newUser = User.Register(username, email, hashedPassword, "User");
+       
+       // Save to DB
+       await _userRepository.AddUserAsync(newUser);
+       
+       // ⭐ RAISE DOMAIN EVENT
+       newUser.RaiseRegisteredEvent(); // Add event vào _domainEvents list
+       
+       // ⭐ SAVE → Trigger event dispatch
+       await _userRepository.SaveChangesAsync();
+       
+       return new RegisterResponse { ... };
+   }
+   ↓
+5️⃣ REPOSITORY LAYER
+   public async Task SaveChangesAsync()
+   {
+       await _context.SaveChangesAsync(); // ← Gọi DbContext
+   }
+   ↓
+6️⃣ DBCONTEXT - SaveChangesAsync() OVERRIDE
+   public override async Task<int> SaveChangesAsync(...)
+   {
+       // 1. Thu thập entities có events
+       var entities = ChangeTracker.Entries<IHasDomainEvents>()
+           .Where(e => e.Entity.DomainEvents.Any())
+           .ToList();
+       
+       // 2. Lấy events
+       var events = entities.SelectMany(e => e.DomainEvents).ToList();
+       // → [UserRegistered(IdUser=5, Email="user@mail.com", Code="ABC123")]
+       
+       // 3. Clear events khỏi entities
+       entities.ForEach(e => e.ClearDomainEvents());
+       
+       // 4. LƯU DATABASE TRƯỚC (Data Consistency)
+       var result = await base.SaveChangesAsync();
+       // → INSERT INTO Users VALUES (5, 'user@mail.com', ...)
+       
+       // 5. DISPATCH EVENTS
+       await _eventDispatcher.DispatchAllAsync(events);
+       
+       return result;
+   }
+   ↓
+7️⃣ DOMAIN EVENT DISPATCHER (Auto-discovery)
+   public async Task DispatchAsync(IDomainEvent domainEvent, ...)
+   {
+       // Auto-find wrapper
+       // UserRegistered → UserRegisteredEvent (via Reflection)
+       var notification = CreateNotification(domainEvent);
+       
+       // Publish qua MediatR
+       await _mediator.Publish(notification); // ← INotification
+   }
+   ↓
+8️⃣ MEDIATR PUBLISH → Gọi TẤT CẢ handlers
+   ┌─────────────────────────────────────────┐
+   │ UserNotificationHandler                 │
+   │  → Gửi email xác thực với code ABC123   │
+   │  → SMTP (Gmail/Outlook)                 │
+   └─────────────────────────────────────────┘
+   ┌─────────────────────────────────────────┐
+   │ UserAuditLogHandler                     │
+   │  → Ghi log: "User 5 registered"         │
+   │  → INSERT INTO AuditLogs                │
+   └─────────────────────────────────────────┘
+   ┌─────────────────────────────────────────┐
+   │ UserCacheInvalidationHandler            │
+   │  → Xóa cache users list                 │
+   └─────────────────────────────────────────┘
+   ↓
+9️⃣ RESPONSE trả về Controller
+   return Ok({
+       userId: 5,
+       username: "john",
+       email: "user@mail.com",
+       message: "Đăng ký thành công! Check email để kích hoạt"
+   });
+   ↓
+🔟 EXCEPTION HANDLING (nếu có lỗi)
+   GlobalExceptionFilter:
+   - ValidationException → 400 BadRequest
+   - InvalidOperationException → 400 (Email exists)
+   - UnauthorizedException → 401
+   - Unknown → 500 Internal Server Error
+
+
+# Ví dụ 2: Tạo Order (POST /api/orders)
+   1️⃣ REQUEST
+   POST /api/orders
+   Body: {
+     idUser: 5,
+     note: "Giao nhanh",
+     items: [
+       { idBook: 10, quantity: 2 },
+       { idBook: 15, quantity: 1 }
+     ]
+   }
+   ↓
+2️⃣ CONTROLLER (OrdersController)
+   var result = await _mediator.Send(command);
+   ↓
+3️⃣ VALIDATION BEHAVIOR
+   CreateOrderCommandValidator:
+   - IdUser required
+   - Items not empty
+   - Quantity > 0
+   ↓
+4️⃣ COMMAND HANDLER (CreateOrderCommandHandler)
+   // 1. Tạo Order aggregate
+   var order = Orders.Create(idUser, note);
+   
+   // 2. Save để có IdOrder (auto-increment)
+   await _orderRepository.AddAsync(order);
+   await _orderRepository.SaveChangesAsync();
+   
+   // 3. Thêm OrderDetails
+   foreach (var item in items) {
+       var book = await _bookRepository.GetBookByIdAsync(item.IdBook);
+       if (book == null) return NotFound;
+       
+       // Check stock
+       if (book.Quantity < item.Quantity) return InsufficientStock;
+       
+       var price = book.SellPrice > 0 ? book.SellPrice : book.ListPrice;
+       var detail = OrderDetails.Create(order.IdOrder, item.IdBook, item.Quantity, price);
+       order.AddOrderDetail(detail);
+   }
+   
+   // 4. Recalculate total
+   order.RecalculateTotalPrice();
+   
+   // 5. RAISE EVENT
+   order.RaiseCreatedEvent(); // ← OrderCreated event
+   
+   // 6. SAVE → Dispatch events
+   await _orderRepository.SaveChangesAsync();
+   ↓
+5️⃣ DBCONTEXT SaveChanges()
+   // Lưu Order + OrderDetails + Dispatch OrderCreated event
+   ↓
+6️⃣ EVENT HANDLERS (Parallel execution)
+   ┌─────────────────────────────────────┐
+   │ OrderNotificationHandler            │
+   │  → Gửi email xác nhận đơn hàng      │
+   └─────────────────────────────────────┘
+   ┌─────────────────────────────────────┐
+   │ OrderAuditLogHandler                │
+   │  → Log: "Order #123 created"        │
+   └─────────────────────────────────────┘
+   ┌─────────────────────────────────────┐
+   │ OrderCacheInvalidationHandler       │
+   │  → Clear cache orders list          │
+   └─────────────────────────────────────┘
+   ┌─────────────────────────────────────┐
+   │ OrderLoggingHandler                 │
+   │  → Console log order details        │
+   └─────────────────────────────────────┘
+   ↓
+7️⃣ RESPONSE
+   return CreatedAtAction(GetOrderById, 
+       new { id = 123 },
+       new { message: "Tạo đơn hàng thành công", data: orderDTO }
+   );
+
+
+   # 📈 DATA FLOW SUMMARY
+   HTTP Request
+    ↓
+[Controller] - Minimal logic, chỉ route
+    ↓
+[MediatR Send/Publish]
+    ↓
+[Validation Behavior] - FluentValidation
+    ↓
+[Command/Query Handler] - Business logic
+    ↓
+[Repository] - Data access
+    ↓
+[DbContext.SaveChangesAsync()] - Transaction + Event Dispatch
+    ↓
+[DomainEventDispatcher] - Auto-find wrapper
+    ↓
+[MediatR.Publish] - Fan-out to handlers
+    ↓
+[Event Handlers] - Side-effects (Email, Log, Cache...)
+    ↓
+[Response] - Return DTO to controller
+    ↓
+HTTP Response (JSON)

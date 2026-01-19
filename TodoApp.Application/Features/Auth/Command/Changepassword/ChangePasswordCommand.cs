@@ -1,0 +1,12 @@
+using MediatR;
+
+namespace TodoApp.Application.Features.Auth.Command.Changepassword
+{
+    public class ChangePasswordCommand : IRequest<ChangePasswordResponse>
+    {
+        public int UserId { get; set; }
+        public string OldPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

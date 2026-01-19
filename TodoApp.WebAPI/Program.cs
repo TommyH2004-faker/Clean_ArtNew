@@ -21,8 +21,7 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add SignalR for realtime notifications
-builder.Services.AddSignalR();
+
 
 // Configure Database
 var serverVersion = new MySqlServerVersion(new Version(8, 0, 29));
@@ -41,6 +40,7 @@ builder.Services.AddScoped<IGenreRepository, GenreRepositoryImpl>();
 builder.Services.AddScoped<IUserRepository, UserRepositoryImpl>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepositoryImpl>();
 builder.Services.AddScoped<IOrderRepository, OrderRepositoryImpl>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepositoryImpl>();
 
 // Register Domain Event Dispatcher (Auto-discovery cho Event-Driven Architecture)
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
@@ -51,8 +51,8 @@ builder.Services.AddMemoryCache();
 // Register Email Service (SMTP - Gmail/Outlook)
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
-// Register SignalR Notification Service
-builder.Services.AddScoped<INotificationService, TodoApp.Infrastructure.Services.SignalRNotificationService<TodoApp.WebAPI.Hubs.NotificationHub>>();
+// Register Notification Service (SignalR)
+builder.Services.AddScoped<INotificationService, SignalRNotificationService>();
 
 // Register Services
 builder.Services.AddScoped<IBookService, BookService>();
@@ -131,7 +131,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Map SignalR Hub
-app.MapHub<TodoApp.WebAPI.Hubs.NotificationHub>("/notificationHub");
 
 app.Run();

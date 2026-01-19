@@ -19,13 +19,13 @@ public class GetAllUserHandle : IRequestHandler<GetAllUserQuery, Result<List<Use
         var userDTOs = users.Select(user => new UserResponseDTO
         {
             IdUser = user.IdUser,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Username = user.Username,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            DeliveryAddress = user.DeliveryAddress,
-            Password = user.PasswordHash
+            FirstName = user?.FirstName,
+            LastName = user?.LastName,
+            Username = user?.Username,
+            Email = user?.Email,
+            PhoneNumber = user?.PhoneNumber,
+            DeliveryAddress = user?.DeliveryAddress,
+            Password = user?.PasswordHash
         }).ToList();
         return Result<List<UserResponseDTO>>.Success(userDTOs);
     }

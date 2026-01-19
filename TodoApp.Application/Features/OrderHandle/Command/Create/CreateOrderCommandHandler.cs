@@ -25,14 +25,10 @@ namespace TodoApp.Application.Features.OrderHandle.Command.Create
 
         public async Task<Result<OrderResponseDTO>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
-            // 1. Tạo Order
+            // 1. Tạo Order aggregate (chưa có IdOrder)
             var order = Orders.Create(request.IdUser, request.Note);
 
-            // 2. Save Order để có IdOrder
-            await _orderRepository.AddAsync(order);
-            await _orderRepository.SaveChangesAsync();
-
-            // 3. Thêm OrderDetails với giá từ Book
+            // 2. Validate và thêm OrderDetails TRƯỚC KHI save
             foreach (var item in request.Items)
             {
                 // Lấy thông tin Book để có giá
@@ -54,8 +50,9 @@ namespace TodoApp.Application.Features.OrderHandle.Command.Create
                 // Lấy giá bán (SellPrice nếu có, không thì ListPrice)
                 var price = book.SellPrice > 0 ? (decimal)book.SellPrice : (decimal)book.ListPrice;
 
+                // ⭐ OrderDetails.IdOrder = 0, EF Core sẽ tự động gán khi SaveChanges
                 var orderDetail = OrderDetails.Create(
-                    order.IdOrder,
+                    order.IdOrder, // Tạm thời = 0
                     item.IdBook,
                     item.Quantity,
                     price
@@ -63,14 +60,29 @@ namespace TodoApp.Application.Features.OrderHandle.Command.Create
                 order.AddOrderDetail(orderDetail);
             }
 
-            // 4. Recalculate total và save
+            // 3. Recalculate total price
             order.RecalculateTotalPrice();
             
-            // 5. Raise Created Event
+            // 4. Add vào DbContext (tracked but not saved)
+            await _orderRepository.AddAsync(order);
+            
+            // 5. ⭐ SAVE LẦN 1: Order + OrderDetails (ATOMIC trong 1 transaction)
+            // EF Core tự động:
+            //   - INSERT Order → IdOrder = 123 (từ DB)
+            //   - Gán IdOrder = 123 cho tất cả OrderDetails
+            //   - INSERT OrderDetails với IdOrder = 123
+            await _orderRepository.SaveChangesAsync();
+            
+            // 6. ⭐ Raise event SAU khi đã có IdOrder
             order.RaiseCreatedEvent();
-            await _orderRepository.SaveChangesAsync(); // Events được dispatch tại đây
+            
+            // 7. ⭐ SAVE LẦN 2: Chỉ dispatch events (không insert thêm data)
+            // Entity Order đã tracked, không có thay đổi data
+            // → Chỉ trigger event dispatch trong DbContext
+            await _orderRepository.SaveChangesAsync();
 
-            _logger.LogInformation("Order #{OrderId} created successfully", order.IdOrder);
+            _logger.LogInformation("Order #{OrderId} created successfully with {Count} items", 
+                order.IdOrder, order.OrderDetails.Count);
 
             // 6. Load lại Order với Book details để có BookName
             var orderWithDetails = await _orderRepository.GetByIdWithDetailsAsync(order.IdOrder);

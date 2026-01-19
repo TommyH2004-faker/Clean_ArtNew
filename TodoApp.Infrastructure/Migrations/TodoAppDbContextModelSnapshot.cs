@@ -384,6 +384,65 @@ namespace TodoApp.Infrastructure.Migrations
                     b.ToTable("Images", (string)null);
                 });
 
+            modelBuilder.Entity("TodoApp.Domain.Entities.Notification", b =>
+                {
+                    b.Property<int>("IdNotification")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_notification");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdNotification"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("message");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("json")
+                        .HasColumnName("metadata_json");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("read_at");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int")
+                        .HasColumnName("type");
+
+                    b.HasKey("IdNotification");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("idx_notification_created_at");
+
+                    b.HasIndex("IsRead")
+                        .HasDatabaseName("idx_notification_is_read");
+
+                    b.HasIndex("Type")
+                        .HasDatabaseName("idx_notification_type");
+
+                    b.ToTable("notifications", (string)null);
+                });
+
             modelBuilder.Entity("TodoApp.Domain.Entities.OrderDetails", b =>
                 {
                     b.Property<int>("IdOrderDetail")
@@ -567,7 +626,6 @@ namespace TodoApp.Infrastructure.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("Avatar")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
@@ -575,7 +633,6 @@ namespace TodoApp.Infrastructure.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("DeliveryAddress")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
@@ -583,29 +640,25 @@ namespace TodoApp.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
-                    b.Property<bool?>("Enabled")
+                    b.Property<bool>("Enabled")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 

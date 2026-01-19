@@ -1,7 +1,7 @@
 namespace TodoApp.Domain.Common
 {
     /// <summary>
-    /// Interface cho Aggregate Roots có thể raise Domain Events
+    /// // Interface cho Entity có khả năng phát sinh events
     /// </summary>
     public interface IHasDomainEvents
     {
