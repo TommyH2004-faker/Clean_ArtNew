@@ -19,7 +19,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Cancel
         public Task Handle(OrderCancelledEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogWarning(
-                "❌ [ORDER] Order #{OrderId} cancelled at {Time} - Reason: {Reason}",
+                " [ORDER] Order #{OrderId} cancelled at {Time} - Reason: {Reason}",
                 notification.IdOrder,
                 notification.CancelledAt,
                 notification.Reason);

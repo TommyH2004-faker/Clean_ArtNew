@@ -29,7 +29,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Delivery
         {
             _logger.LogInformation("📧 [NOTIFICATION] Sending email for order delivery #{OrderId}", notification.IdOrder);
 
-            var subject = $"✅ Order Delivered: #{notification.IdOrder}";
+            var subject = $" Order Delivered: #{notification.IdOrder}";
             var body = $@"
                 <h2>Order Delivered Successfully</h2>
                 <p><strong>Order ID:</strong> #{notification.IdOrder}</p>

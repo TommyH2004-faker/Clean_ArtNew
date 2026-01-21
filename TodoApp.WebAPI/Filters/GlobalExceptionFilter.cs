@@ -40,7 +40,7 @@ namespace TodoApp.WebAPI.Filters
                 return;
             }
 
-            // ✅ Business Logic Errors (Email/Username trùng, etc.)
+            //  Business Logic Errors (Email/Username trùng, etc.)
             if (context.Exception is InvalidOperationException invalidOpException)
             {
                 _logger.LogWarning("Business logic error: {Message}", invalidOpException.Message);
@@ -57,7 +57,7 @@ namespace TodoApp.WebAPI.Filters
                 return;
             }
 
-            // ✅ Unauthorized (Login failed, Invalid token, etc.)
+            //  Unauthorized (Login failed, Invalid token, etc.)
             if (context.Exception is UnauthorizedAccessException unauthorizedException)
             {
                 _logger.LogWarning("Unauthorized access: {Message}", unauthorizedException.Message);
@@ -77,7 +77,7 @@ namespace TodoApp.WebAPI.Filters
                 return;
             }
 
-            // ❌ Lỗi không xác định
+            //  Lỗi không xác định
             _logger.LogError(context.Exception, "Unhandled exception");
 
             context.Result = new ObjectResult(new

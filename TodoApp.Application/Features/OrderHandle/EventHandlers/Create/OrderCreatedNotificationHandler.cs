@@ -32,6 +32,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Create
         {
             _logger.LogInformation("📧 [NOTIFICATION] Sending notifications for new order #{OrderId}", notification.IdOrder);
 
+                   
             var totalAmount = notification.OrderDetails.Sum(od => od.Subtotal);
 
             // 1. SignalR Realtime Notification (cho chuông 🔔)

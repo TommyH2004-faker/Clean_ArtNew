@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TodoApp.Application.Features.OrderHandle.Command.Cancel;
 using TodoApp.Application.Features.OrderHandle.Command.Confirm;
 using TodoApp.Application.Features.OrderHandle.Command.Create;
+using TodoApp.Application.Features.OrderHandle.Command.Delivery;
 using TodoApp.Application.Features.OrderHandle.Command.Ship;
 using TodoApp.Application.Features.OrderHandle.Query.GetAll;
 using TodoApp.Application.Features.OrderHandle.Query.GetById;
@@ -146,6 +147,27 @@ namespace TodoApp.WebAPI.Controller
             { 
                 IdOrder = id, 
                 Reason = request.Reason 
+            };
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
+            {
+                return result.ErrorType switch
+                {
+                    Application.Common.ErrorType.Validation => BadRequest(new { message = result.ErrorMessage }),
+                    Application.Common.ErrorType.NotFound => NotFound(new { message = result.ErrorMessage }),
+                    _ => StatusCode(500, new { message = result.ErrorMessage })
+                };
+            }
+
+            return Ok(new { message = result.Data });
+        }
+        [HttpPost("{id}/deliver")]
+        public async Task<IActionResult> DeliverOrder(int id)
+        {
+            var command = new DeliveryCommand
+            {
+                IdOrder = id,
             };
             var result = await _mediator.Send(command);
 

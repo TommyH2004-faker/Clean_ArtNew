@@ -30,7 +30,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Confirm
         {
             _logger.LogInformation("📧 [NOTIFICATION] Sending email for order confirmation #{OrderId}", notification.IdOrder);
 
-            var subject = $"✅ Order Confirmed: #{notification.IdOrder}";
+            var subject = $" Order Confirmed: #{notification.IdOrder}";
             var body = $@"
                 <h2>Order Confirmed</h2>
                 <p><strong>Order ID:</strong> #{notification.IdOrder}</p>

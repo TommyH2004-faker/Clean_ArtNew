@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TodoApp.Application.Behaviors;
+using TodoApp.Application.Features.BookHandle.Command;
 using TodoApp.Application.Repository;
 using TodoApp.Application.Service;
 using TodoApp.Infrastructure.Persistence;
@@ -104,16 +105,14 @@ builder.Services.AddAuthorization();
 // nó sẽ tự đăng ký tất cả các command, query handlers VÀ event handlers
  builder.Services.AddMediatR(cfg => {
         // Register từ Application layer (Commands, Queries, Event Handlers)
-        cfg.RegisterServicesFromAssembly(typeof(TodoApp.Application.Features.BookHandle.Command.CreateBookCommand).Assembly);
-        
+        cfg.RegisterServicesFromAssembly(typeof(CreateBookCommand).Assembly);
         //  THÊM ValidationBehavior để tự động validate
-        cfg.AddOpenBehavior(typeof(TodoApp.Application.Behaviors.ValidationBehavior<,>));
+        cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
     });
 //  FluentValidation
 // Tự động đăng ký tất cả các validator từ assembly Application
 builder.Services.AddValidatorsFromAssembly(typeof(TodoApp.Application.Features.BookHandle.Command.CreateBookCommand).Assembly);
-// Đăng ký MediatR Pipeline Behavior
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline

@@ -2,11 +2,11 @@ namespace TodoApp.Application.Common
 {
     public enum ErrorType
     {
-        Validation,
-        NotFound,
+        Validation, 
+        NotFound, 
         Conflict,
-        Forbidden,
+        Forbidden, 
         Unauthorized,
-        Failure
+        Failure 
     }
 }

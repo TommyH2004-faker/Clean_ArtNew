@@ -22,7 +22,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Create
             var totalItems = notification.OrderDetails.Sum(od => od.Quantity);
 
             _logger.LogInformation(
-                "✅ [ORDER] Order #{OrderId} created by User #{UserId} at {Time} - {ItemCount} items, {TotalItems} total quantity",
+                " [ORDER] Order #{OrderId} created by User #{UserId} at {Time} - {ItemCount} items, {TotalItems} total quantity",
                 notification.IdOrder,
                 notification.IdUser,
                 notification.OccurredOn,

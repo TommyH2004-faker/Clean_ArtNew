@@ -77,14 +77,14 @@ namespace TodoApp.WebAPI.Controllers
                 return BadRequest(new { message = result.ErrorMessage, errors = result.Errors });
             }
             
-            // ✅ Trả về đầy đủ thông tin sách vừa tạo
+            // Trả về đầy đủ thông tin sách vừa tạo
             return CreatedAtAction(
                 nameof(GetBookById),
                 new { idBook = result.Data!.IdBook },
                 new 
                 { 
                     message = "Tạo sách thành công",
-                    data = result.Data  // ✅ Thông tin đầy đủ của book
+                    data = result.Data  //  Thông tin đầy đủ của book
                 }
             );
         }
@@ -109,11 +109,11 @@ namespace TodoApp.WebAPI.Controllers
                 return BadRequest(new { message = result.ErrorMessage, errors = result.Errors });
             }
 
-            // ✅ Trả về đầy đủ thông tin sách đã cập nhật
+            // Trả về đầy đủ thông tin sách đã cập nhật
             return Ok(new 
             { 
                 message = "Cập nhật sách thành công",
-                data = result.Data  // ✅ Thông tin book sau khi update
+                data = result.Data  //  Thông tin book sau khi update
             });
         }
 

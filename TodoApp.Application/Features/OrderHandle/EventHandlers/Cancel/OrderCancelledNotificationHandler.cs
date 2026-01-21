@@ -29,7 +29,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Cancel
         {
             _logger.LogInformation("📧 [NOTIFICATION] Sending email for order cancellation #{OrderId}", notification.IdOrder);
 
-            var subject = $"❌ Order Cancelled: #{notification.IdOrder}";
+            var subject = $" Order Cancelled: #{notification.IdOrder}";
             var body = $@"
                 <h2>Order Cancelled</h2>
                 <p><strong>Order ID:</strong> #{notification.IdOrder}</p>

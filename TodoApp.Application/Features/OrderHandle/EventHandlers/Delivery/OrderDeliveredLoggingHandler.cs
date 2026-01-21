@@ -19,7 +19,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Delivery
         public Task Handle(OrderDeliveredEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation(
-                "✅ [ORDER] Order #{OrderId} delivered successfully at {Time}",
+                " [ORDER] Order #{OrderId} delivered successfully at {Time}",
                 notification.IdOrder,
                 notification.DeliveredAt);
 

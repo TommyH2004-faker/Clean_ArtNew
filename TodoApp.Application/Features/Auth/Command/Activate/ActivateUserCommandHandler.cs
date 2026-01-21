@@ -36,7 +36,7 @@ namespace TodoApp.Application.Features.Auth.Command.Activate
             // Kiểm tra mã kích hoạt
             if (user.ActivationCode != request.ActivationCode)
             {
-                _logger.LogWarning("❌ [ACTIVATION] Mã kích hoạt không đúng cho user #{UserId}", request.UserId);
+                _logger.LogWarning(" [ACTIVATION] Mã kích hoạt không đúng cho user #{UserId}", request.UserId);
                 return Result<string>.Failure(ErrorType.Validation, "Mã kích hoạt không đúng");
             }
 
@@ -44,7 +44,7 @@ namespace TodoApp.Application.Features.Auth.Command.Activate
             user.Activate();
             await _userRepository.SaveChangesAsync(); // Dispatch UserActivated event
 
-            _logger.LogInformation("✅ [ACTIVATION] User #{UserId} ({Email}) đã được kích hoạt thành công", 
+            _logger.LogInformation(" [ACTIVATION] User #{UserId} ({Email}) đã được kích hoạt thành công", 
                 user.IdUser, user.Email);
 
             return Result<string>.Success("Kích hoạt tài khoản thành công! Bạn có thể đăng nhập ngay.");

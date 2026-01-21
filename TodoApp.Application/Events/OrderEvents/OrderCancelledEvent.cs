@@ -15,8 +15,7 @@ namespace TodoApp.Application.Events
         /// <summary>
         /// Lấy Domain Event bên trong wrapper
         /// Lazy load để tránh truy cập không cần thiết
-        /// 
-        /// 
+      
         /// </summary>
         IDomainEvent IDomainEventWrapper.DomainEvent => DomainEvent;
         

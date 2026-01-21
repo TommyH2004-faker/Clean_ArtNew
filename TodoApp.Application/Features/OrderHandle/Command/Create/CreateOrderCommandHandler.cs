@@ -73,10 +73,10 @@ namespace TodoApp.Application.Features.OrderHandle.Command.Create
             //   - INSERT OrderDetails với IdOrder = 123
             await _orderRepository.SaveChangesAsync();
             
-            // 6. ⭐ Raise event SAU khi đã có IdOrder
+            // 6.  Raise event SAU khi đã có IdOrder
             order.RaiseCreatedEvent();
             
-            // 7. ⭐ SAVE LẦN 2: Chỉ dispatch events (không insert thêm data)
+            // 7.  SAVE LẦN 2: Chỉ dispatch events (không insert thêm data)
             // Entity Order đã tracked, không có thay đổi data
             // → Chỉ trigger event dispatch trong DbContext
             await _orderRepository.SaveChangesAsync();

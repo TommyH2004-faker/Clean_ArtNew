@@ -8592,11 +8592,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\TestArt\\TodoApp.WebAPI\\TodoApp.WebAPI.csproj",
+      "projectUniqueName": "D:\\TestArt\\Clean_ArtNew\\TodoApp.WebAPI\\TodoApp.WebAPI.csproj",
       "projectName": "TodoApp.WebAPI",
-      "projectPath": "D:\\TestArt\\TodoApp.WebAPI\\TodoApp.WebAPI.csproj",
+      "projectPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.WebAPI\\TodoApp.WebAPI.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\TestArt\\TodoApp.WebAPI\\obj\\",
+      "outputPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.WebAPI\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -8617,11 +8617,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\TestArt\\TodoApp.Application\\TodoApp.Application.csproj": {
-              "projectPath": "D:\\TestArt\\TodoApp.Application\\TodoApp.Application.csproj"
+            "D:\\TestArt\\Clean_ArtNew\\TodoApp.Application\\TodoApp.Application.csproj": {
+              "projectPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Application\\TodoApp.Application.csproj"
             },
-            "D:\\TestArt\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj": {
-              "projectPath": "D:\\TestArt\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj"
+            "D:\\TestArt\\Clean_ArtNew\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj": {
+              "projectPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj"
             }
           }
         }

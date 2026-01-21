@@ -25,7 +25,7 @@ namespace TodoApp.Application.Features.BookHandle.Command
                 return Result<BookResponseDTO>.Failure(ErrorType.NotFound, "Không tìm thấy sách");
             }
 
-            // ✅ Sử dụng Domain method Update để đảm bảo business rules
+            //  Sử dụng Domain method Update để đảm bảo business rules
             existingBook.Update(
                 IdBook: request.IdBook,
                 author: request.Author,
@@ -42,7 +42,7 @@ namespace TodoApp.Application.Features.BookHandle.Command
             // Lưu vào database
             await _bookRepository.UpdateBookAsync(existingBook);
 
-            // ✅ Mapping Domain → DTO để trả về thông tin sách đã cập nhật
+            //  Mapping Domain → DTO để trả về thông tin sách đã cập nhật
             var bookDTO = new BookResponseDTO
             {
                 IdBook = existingBook.IdBook,

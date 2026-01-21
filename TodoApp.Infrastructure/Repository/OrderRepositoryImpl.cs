@@ -27,7 +27,7 @@ namespace TodoApp.Infrastructure.Repository
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Book)
                 .Include(o => o.User)
-                .Include(o => o.Payment)
+                .Include(o => o.IdPayment)
                 .Include(o => o.Delivery)
                 .FirstOrDefaultAsync(o => o.IdOrder == idOrder);
         }
@@ -60,6 +60,22 @@ namespace TodoApp.Infrastructure.Repository
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Orders> Update(Orders order)
+        {
+            _context.Orders.Update(order);
+            return await Task.FromResult(order);
+        }
+
+        public async Task<Orders?> GetById(int idOrder)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Book)
+                .Include(o => o.User)
+                .Include(o => o.Delivery)
+                .FirstOrDefaultAsync(o => o.IdOrder == idOrder);
         }
     }
 }

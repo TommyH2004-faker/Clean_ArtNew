@@ -23,7 +23,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Cancel
 
         public Task Handle(OrderCancelledEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Xóa cache đơn hàng sau khi hủy - Đơn hàng #{OrderId}", notification.IdOrder);
+            _logger.LogInformation(" [CACHE] Xóa cache đơn hàng sau khi hủy - Đơn hàng #{OrderId}", notification.IdOrder);
             
             _cache.Remove("orders:all");
             _cache.Remove($"orders:id:{notification.IdOrder}");

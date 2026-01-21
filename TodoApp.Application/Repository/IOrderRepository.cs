@@ -10,5 +10,7 @@ namespace TodoApp.Application.Repository
         Task<List<Orders>> GetByUserIdAsync(int idUser);
         Task AddAsync(Orders order);
         Task SaveChangesAsync();
+        Task<Orders> Update(Orders order);
+        Task<Orders?> GetById(int idOrder);
     }
 }

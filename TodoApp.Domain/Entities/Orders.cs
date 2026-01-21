@@ -17,11 +17,11 @@ namespace TodoApp.Domain.Entities
         public string? Note { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }
+        public int ? IdPayment { get; private set; }
 
         // Navigation properties
         public User User { get; private set; } = null!;
         public ICollection<OrderDetails> OrderDetails { get; private set; } = new List<OrderDetails>();
-        public Payment? Payment { get; private set; }
         public Delivery? Delivery { get; private set; }
 
         // Domain Events Support
@@ -183,5 +183,7 @@ namespace TodoApp.Domain.Entities
             Note = note;
             UpdatedAt = DateTime.UtcNow;
         }
+
+       
     }
 }

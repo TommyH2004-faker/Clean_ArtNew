@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "/qC83I9v8Es=",
+  "dgSpecHash": "Kzx1I6VJHqc=",
   "success": true,
-  "projectFilePath": "D:\\TestArt\\TodoApp.WebAPI\\TodoApp.WebAPI.csproj",
+  "projectFilePath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.WebAPI\\TodoApp.WebAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",

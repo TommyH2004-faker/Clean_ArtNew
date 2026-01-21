@@ -43,7 +43,7 @@ namespace TodoApp.Application.Features.Auth.Command.Register
             // Lưu vào database
             await _userRepository.AddUserAsync(newUser);
             
-            // ⭐ Raise event SAU khi đã lưu (có IdUser)
+            //  Raise event SAU khi đã lưu (có IdUser)
             newUser.RaiseRegisteredEvent();
             await _userRepository.SaveChangesAsync(); // Dispatch events
 

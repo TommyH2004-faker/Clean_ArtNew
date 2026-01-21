@@ -34,7 +34,7 @@ namespace TodoApp.Application.Features.Auth.EventHandlers.Active
 
             // 1. Push realtime notification cho admin
             await _notificationService.SendUserNotificationAsync(
-                title: $"✅ User đã kích hoạt: {notification.Email}",
+                title: $" User đã kích hoạt: {notification.Email}",
                 message: $"Email: {notification.Email} - Tài khoản đang hoạt động",
                 metadata: new
                 {
@@ -47,7 +47,7 @@ namespace TodoApp.Application.Features.Auth.EventHandlers.Active
             );
 
             // 2. Gửi email chúc mừng
-            var subject = "✅ Tài khoản đã được kích hoạt thành công!";
+            var subject = " Tài khoản đã được kích hoạt thành công!";
             var body = $@"
                 <!DOCTYPE html>
                 <html>
@@ -85,7 +85,7 @@ namespace TodoApp.Application.Features.Auth.EventHandlers.Active
                 </html>";
 
             await _emailService.SendEmailAsync(notification.Email, subject, body, isHtml: true);
-            _logger.LogInformation("✅ [USER] Đã gửi email chúc mừng kích hoạt cho {Email}", notification.Email);
+            _logger.LogInformation(" [USER] Đã gửi email chúc mừng kích hoạt cho {Email}", notification.Email);
         }
     }
 }

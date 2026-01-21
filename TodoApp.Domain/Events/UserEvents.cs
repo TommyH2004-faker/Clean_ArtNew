@@ -33,17 +33,6 @@ namespace TodoApp.Domain.Events
                 ActivatedAt = activatedAt;
             }
         }
-
-        public record UserProfileUpdated : DomainEventBase
-        {
-            public int IdUser { get; init; }
-            
-            public UserProfileUpdated(int idUser)
-            {
-                IdUser = idUser;
-            }
-        }
-
         public record UserPasswordChanged : DomainEventBase
         {
             public int IdUser { get; init; }

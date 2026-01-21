@@ -154,8 +154,7 @@ namespace TodoApp.Domain.Entities
 
         public void SetRefreshToken(string refreshToken, DateTime refreshTokenExpiry)
         {
-            // Lưu refresh token và expiry
-            // Giả sử có các thuộc tính RefreshToken và RefreshTokenExpiry
+    
             this.RefreshToken = refreshToken;
             this.RefreshTokenExpiry = refreshTokenExpiry;
         }

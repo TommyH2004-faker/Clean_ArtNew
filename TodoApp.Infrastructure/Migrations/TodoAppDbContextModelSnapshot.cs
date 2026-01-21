@@ -394,10 +394,8 @@ namespace TodoApp.Infrastructure.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdNotification"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsRead")
                         .ValueGeneratedOnAdd()
@@ -488,6 +486,9 @@ namespace TodoApp.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int?>("IdPayment")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdUser")
                         .HasColumnType("int");
 
@@ -526,22 +527,11 @@ namespace TodoApp.Infrastructure.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdPayment"));
 
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<double>("FeeDelivery")
+                        .HasColumnType("double");
 
                     b.Property<int>("IdOrder")
                         .HasColumnType("int");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
 
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
@@ -553,18 +543,9 @@ namespace TodoApp.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
-                    b.Property<string>("TransactionId")
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
                     b.HasKey("IdPayment");
 
-                    b.HasIndex("IdOrder")
-                        .IsUnique();
-
                     b.HasIndex("Status");
-
-                    b.HasIndex("TransactionId");
 
                     b.ToTable("Payments", (string)null);
                 });
@@ -802,17 +783,6 @@ namespace TodoApp.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TodoApp.Domain.Entities.Payment", b =>
-                {
-                    b.HasOne("TodoApp.Domain.Entities.Orders", "Order")
-                        .WithOne("Payment")
-                        .HasForeignKey("TodoApp.Domain.Entities.Payment", "IdOrder")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-                });
-
             modelBuilder.Entity("TodoApp.Domain.Entities.Review", b =>
                 {
                     b.HasOne("TodoApp.Domain.Entities.Book", "Book")
@@ -853,8 +823,6 @@ namespace TodoApp.Infrastructure.Migrations
                     b.Navigation("Delivery");
 
                     b.Navigation("OrderDetails");
-
-                    b.Navigation("Payment");
                 });
 #pragma warning restore 612, 618
         }

@@ -19,7 +19,7 @@ namespace TodoApp.Application.Features.OrderHandle.EventHandlers.Confirm
         public Task Handle(OrderConfirmedEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation(
-                "✅ [ORDER] Order #{OrderId} confirmed at {Time}",
+                " [ORDER] Order #{OrderId} confirmed at {Time}",
                 notification.IdOrder,
                 notification.ConfirmedAt);
 

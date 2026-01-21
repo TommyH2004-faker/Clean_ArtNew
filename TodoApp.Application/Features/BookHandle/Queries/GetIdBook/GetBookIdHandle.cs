@@ -22,7 +22,7 @@ public class GetBookByIdHandler : IRequestHandler<GetBookByIdQuery, Result<BookR
             return Result<BookResponseDTO>.Failure(ErrorType.NotFound, "Không tìm thấy sách với Id đã cho");
         }
 
-        // ✅ Mapping Domain → DTO (giống GetAllBooks)
+        //  Mapping Domain → DTO (giống GetAllBooks)
         var bookDTO = new BookResponseDTO
         {
             IdBook = book.IdBook,

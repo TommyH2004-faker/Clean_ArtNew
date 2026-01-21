@@ -96,7 +96,7 @@ dotnet add package Pomelo.EntityFrameworkCore.MySql --version 8.0.2
 ```bash
 dotnet ef migrations add <MigrationName> --startup-project ..\TodoApp.WebAPI
 ```dotnet ef migrations add AddNotification --startup-project ..\TodoApp.WebAPI
-
+dotnet ef migrations add LoadDatabaseNew --startup-project ..\TodoApp.WebAPI
 ### **Áp dụng Migration vào Database**
 ```bash
 dotnet ef database update --startup-project ..\TodoApp.WebAPI
@@ -1739,14 +1739,14 @@ namespace TodoApp.Application.Features.GenreHandle.EventHandlers
 
         public Task Handle(GenreCreatedEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing cache after Genre creation");
+            _logger.LogInformation(" [CACHE] Clearing cache after Genre creation");
             _cache.Remove(ALL_GENRES_CACHE_KEY);
             return Task.CompletedTask;
         }
 
         public Task Handle(GenreUpdatedEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing cache after Genre update");
+            _logger.LogInformation(" [CACHE] Clearing cache after Genre update");
             _cache.Remove(ALL_GENRES_CACHE_KEY);
             _cache.Remove($"genres:id:{notification.GenreId}");
             return Task.CompletedTask;
@@ -1754,7 +1754,7 @@ namespace TodoApp.Application.Features.GenreHandle.EventHandlers
 
         public Task Handle(GenreDeletedEvent notification, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🗑️ [CACHE] Clearing cache after Genre deletion");
+            _logger.LogInformation(" [CACHE] Clearing cache after Genre deletion");
             _cache.Remove(ALL_GENRES_CACHE_KEY);
             return Task.CompletedTask;
         }
@@ -2424,3 +2424,9 @@ Ví dụ 1: User đăng ký (POST /api/auth/register)
 [Response] - Return DTO to controller
     ↓
 HTTP Response (JSON)
+
+
+
+# IHasDomainEvents: là interface giúp entity lưu lại các event đã xảy ra trong domain.
+# DomainEventBase: là base class dùng để đánh dấu và xác định nơi phát sinh sự kiện trong domain.
+# IDomainEvent: là interface dùng để ghi nhận thời gian xảy ra event và các thông tin liên quan đến event đó.

@@ -54,7 +54,7 @@ namespace TodoApp.Application.Features.Auth.EventHandlers.ChangePassword
                 </html>";
 
             await _emailService.SendEmailAsync(notification.Email, subject, body, isHtml: true);
-            _logger.LogInformation("✅ [USER] Đã gửi email cảnh báo bảo mật cho {Email}", notification.Email);
+            _logger.LogInformation("[USER] Đã gửi email cảnh báo bảo mật cho {Email}", notification.Email);
         }
     }
 }

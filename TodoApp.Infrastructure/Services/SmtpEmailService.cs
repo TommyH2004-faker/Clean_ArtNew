@@ -8,13 +8,6 @@ namespace TodoApp.Infrastructure.Services
 {
     /// <summary>
     /// Implementation của IEmailService sử dụng SMTP.
-    /// 
-    /// Hỗ trợ các SMTP providers:
-    /// - Gmail: smtp.gmail.com:587
-    /// - Outlook: smtp.office365.com:587
-    /// - Custom SMTP server
-    /// 
-    /// Lưu ý Gmail: Cần bật "App Password" thay vì dùng password thường
     /// </summary>
     public class SmtpEmailService : IEmailService
     {
@@ -74,18 +67,18 @@ namespace TodoApp.Infrastructure.Services
 
                 await _smtpClient.SendMailAsync(message);
 
-                _logger.LogInformation("✅ Email sent successfully to {To}", to);
+                _logger.LogInformation(" Email sent successfully to {To}", to);
                 return true;
             }
             catch (SmtpException ex)
             {
-                _logger.LogError(ex, "❌ SMTP Exception while sending email to {To}. StatusCode: {StatusCode}", 
+                _logger.LogError(ex, " SMTP Exception while sending email to {To}. StatusCode: {StatusCode}", 
                     to, ex.StatusCode);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Exception while sending email to {To}", to);
+                _logger.LogError(ex, " Exception while sending email to {To}", to);
                 return false;
             }
         }
@@ -116,17 +109,17 @@ namespace TodoApp.Infrastructure.Services
 
                 await _smtpClient.SendMailAsync(message);
 
-                _logger.LogInformation("✅ Email sent successfully to {Count} recipients", recipients.Count);
+                _logger.LogInformation("Email sent successfully to {Count} recipients", recipients.Count);
                 return true;
             }
             catch (SmtpException ex)
             {
-                _logger.LogError(ex, "❌ SMTP Exception while sending email. StatusCode: {StatusCode}", ex.StatusCode);
+                _logger.LogError(ex, " SMTP Exception while sending email. StatusCode: {StatusCode}", ex.StatusCode);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Exception while sending email to multiple recipients");
+                _logger.LogError(ex, " Exception while sending email to multiple recipients");
                 return false;
             }
         }

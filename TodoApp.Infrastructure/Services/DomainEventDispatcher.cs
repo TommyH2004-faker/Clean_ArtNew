@@ -21,7 +21,7 @@ namespace TodoApp.Infrastructure.Services
          // Auto-discovery: Tự động tìm wrapper cho domain event
         public async Task DispatchAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
         {
-            // 1. Tìm wrapper phù hợp (VD: UserRegistered → UserRegisteredEvent)
+            // 1. Tìm wrapper phù hợp ( UserRegistered → UserRegisteredEvent)
             var notification = CreateNotification(domainEvent);
             
             if (notification != null)

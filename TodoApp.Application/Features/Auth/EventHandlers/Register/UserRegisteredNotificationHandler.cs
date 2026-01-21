@@ -83,7 +83,7 @@ namespace TodoApp.Application.Features.Auth.EventHandlers.Register
                             <h3>🔗 Cách 2: Click vào link bên dưới</h3>
                             <div style=""text-align: center;"">
                                 <a href=""{activationLink}"" class=""button"">
-                                    ✅ Kích hoạt tài khoản ngay
+                                    Kích hoạt tài khoản ngay
                                 </a>
                             </div>
                             
@@ -101,7 +101,7 @@ namespace TodoApp.Application.Features.Auth.EventHandlers.Register
                 </html>";
 
             await _emailService.SendEmailAsync(notification.Email, subject, body, isHtml: true);
-            _logger.LogInformation("✅ [USER] Đã gửi email xác thực thành công cho {Email}", notification.Email);
+            _logger.LogInformation(" [USER] Đã gửi email xác thực thành công cho {Email}", notification.Email);
         }
     }
 }

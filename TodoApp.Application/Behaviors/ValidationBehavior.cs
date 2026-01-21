@@ -7,6 +7,7 @@ namespace TodoApp.Application.Behaviors
     public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
+        // Tất cả validators cho TRequest
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 
         public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
@@ -43,7 +44,6 @@ namespace TodoApp.Application.Behaviors
             {
                 throw new ValidationException(failures);
             }
-
             // Nếu validation pass, tiếp tục đến Handler
             return await next();
         }

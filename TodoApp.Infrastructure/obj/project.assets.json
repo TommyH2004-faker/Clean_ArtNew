@@ -8012,7 +8012,7 @@
       "Microsoft.EntityFrameworkCore.Design >= 8.0.3",
       "Microsoft.EntityFrameworkCore.Tools >= 8.0.3",
       "Pomelo.EntityFrameworkCore.MySql >= 8.0.2",
-      "SendGrid >= 9.8.0",
+      "Sendgrid >= 9.8.0",
       "System.IdentityModel.Tokens.Jwt >= 8.15.0",
       "TodoApp.Application >= 1.0.0",
       "TodoApp.Domain >= 1.0.0"
@@ -8025,11 +8025,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\TestArt\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj",
+      "projectUniqueName": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj",
       "projectName": "TodoApp.Infrastructure",
-      "projectPath": "D:\\TestArt\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj",
+      "projectPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Infrastructure\\TodoApp.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\TestArt\\TodoApp.Infrastructure\\obj\\",
+      "outputPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -8050,11 +8050,11 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\TestArt\\TodoApp.Application\\TodoApp.Application.csproj": {
-              "projectPath": "D:\\TestArt\\TodoApp.Application\\TodoApp.Application.csproj"
+            "D:\\TestArt\\Clean_ArtNew\\TodoApp.Application\\TodoApp.Application.csproj": {
+              "projectPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Application\\TodoApp.Application.csproj"
             },
-            "D:\\TestArt\\TodoApp.Domain\\TodoApp.Domain.csproj": {
-              "projectPath": "D:\\TestArt\\TodoApp.Domain\\TodoApp.Domain.csproj"
+            "D:\\TestArt\\Clean_ArtNew\\TodoApp.Domain\\TodoApp.Domain.csproj": {
+              "projectPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Domain\\TodoApp.Domain.csproj"
             }
           }
         }
@@ -8095,7 +8095,7 @@
             "target": "Package",
             "version": "[8.0.2, )"
           },
-          "SendGrid": {
+          "Sendgrid": {
             "target": "Package",
             "version": "[9.8.0, )"
           },

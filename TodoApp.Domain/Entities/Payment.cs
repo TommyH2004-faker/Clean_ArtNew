@@ -9,22 +9,17 @@ namespace TodoApp.Domain.Entities
         public int IdPayment { get; private set; }
         public int IdOrder { get; private set; }
         public string PaymentMethod { get; private set; } = null!; // COD, CreditCard, BankTransfer, Momo, ZaloPay
-        public decimal Amount { get; private set; }
-        public string Status { get; private set; } = null!; // Pending, Completed, Failed, Refunded
-        public string? TransactionId { get; private set; } // ID từ payment gateway
-        public DateTime CreatedAt { get; private set; }
-        public DateTime? CompletedAt { get; private set; }
-        public string? Note { get; private set; }
 
-        // Navigation properties
-        public Orders Order { get; private set; } = null!;
+       public double FeeDelivery { get; private set; }  
+        public string Status { get; private set; } = null!; // Pending, Completed, Failed, Refunded
+
 
         private Payment() { }
 
         /// <summary>
         /// Factory method: Tạo Payment mới
         /// </summary>
-        public static Payment Create(int idOrder, string paymentMethod, decimal amount, string? note = null)
+        public static Payment Create(int idOrder, string paymentMethod, string? note = null)
         {
             if (idOrder <= 0)
                 throw new ArgumentException("Order ID must be positive", nameof(idOrder));
@@ -32,8 +27,7 @@ namespace TodoApp.Domain.Entities
             if (string.IsNullOrWhiteSpace(paymentMethod))
                 throw new ArgumentException("Payment method cannot be empty", nameof(paymentMethod));
 
-            if (amount <= 0)
-                throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive");
+
 
             // Validate payment method
             var validMethods = new[] { "COD", "CreditCard", "BankTransfer", "Momo", "ZaloPay" };
@@ -44,10 +38,7 @@ namespace TodoApp.Domain.Entities
             {
                 IdOrder = idOrder,
                 PaymentMethod = paymentMethod,
-                Amount = amount,
                 Status = "Pending",
-                Note = note,
-                CreatedAt = DateTime.UtcNow
             };
         }
 
@@ -63,8 +54,7 @@ namespace TodoApp.Domain.Entities
                 throw new InvalidOperationException("Cannot complete a refunded payment");
 
             Status = "Completed";
-            TransactionId = transactionId;
-            CompletedAt = DateTime.UtcNow;
+    
         }
 
         /// <summary>
@@ -76,7 +66,7 @@ namespace TodoApp.Domain.Entities
                 throw new InvalidOperationException("Cannot fail a completed payment");
 
             Status = "Failed";
-            Note = string.IsNullOrEmpty(Note) ? reason : $"{Note}\nFailure: {reason}";
+        
         }
 
         /// <summary>
@@ -88,18 +78,9 @@ namespace TodoApp.Domain.Entities
                 throw new InvalidOperationException("Can only refund completed payments");
 
             Status = "Refunded";
-            Note = string.IsNullOrEmpty(Note) ? reason : $"{Note}\nRefund: {reason}";
+           
         }
 
-        /// <summary>
-        /// Business logic: Cập nhật Transaction ID
-        /// </summary>
-        public void UpdateTransactionId(string transactionId)
-        {
-            if (string.IsNullOrWhiteSpace(transactionId))
-                throw new ArgumentException("Transaction ID cannot be empty", nameof(transactionId));
-
-            TransactionId = transactionId;
-        }
+       
     }
 }

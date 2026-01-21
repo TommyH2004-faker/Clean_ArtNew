@@ -44,7 +44,7 @@ namespace TodoApp.Infrastructure.Services
             // 3. Lưu vào database
             var savedNotification = await _notificationRepository.AddAsync(notification);
 
-            Console.WriteLine($"[✅ NOTIFICATION] {type} - {title} (ID: {savedNotification.IdNotification})");
+            Console.WriteLine($"[ NOTIFICATION] {type} - {title} (ID: {savedNotification.IdNotification})");
         }
     }
 }

@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\TestArt\\TodoApp.Domain\\TodoApp.Domain.csproj",
+      "projectUniqueName": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Domain\\TodoApp.Domain.csproj",
       "projectName": "TodoApp.Domain",
-      "projectPath": "D:\\TestArt\\TodoApp.Domain\\TodoApp.Domain.csproj",
+      "projectPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Domain\\TodoApp.Domain.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\TestArt\\TodoApp.Domain\\obj\\",
+      "outputPath": "D:\\TestArt\\Clean_ArtNew\\TodoApp.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

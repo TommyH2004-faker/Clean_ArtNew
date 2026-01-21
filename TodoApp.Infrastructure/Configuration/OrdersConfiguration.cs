@@ -41,11 +41,7 @@ namespace TodoApp.Infrastructure.Configuration
                 .WithOne(od => od.Order)
                 .HasForeignKey(od => od.IdOrder)
                 .OnDelete(DeleteBehavior.Cascade);
-            
-            builder.HasOne(o => o.Payment)
-                .WithOne(p => p.Order)
-                .HasForeignKey<Payment>(p => p.IdOrder)
-                .OnDelete(DeleteBehavior.Cascade);
+    
             
             builder.HasOne(o => o.Delivery)
                 .WithOne(d => d.Order)
